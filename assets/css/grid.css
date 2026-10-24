@@ -1,0 +1,159 @@
+/* Portfolio home: one line about SALUT, then the works as big 16:9 frames (Gevirtz wall) whose
+   silent loops play on hover, or while on screen on phones. Captions stay short: work and client. */
+
+.intro {
+  padding: clamp(16px, 3vw, 40px) var(--gutter) clamp(28px, 3.6vw, 52px);
+}
+
+.intro__text {
+  max-width: 40ch;
+  font-size: clamp(19px, 1.9vw, 27px);
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  text-wrap: pretty;
+}
+
+/* Who first, on its own line; what we shoot under it, quieter. */
+.intro__text span {
+  display: block;
+  color: var(--fg-dim);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px 16px;
+  margin: 0;
+  padding: 0 var(--gutter);
+  list-style: none;
+}
+
+.grid[aria-busy="true"] {
+  min-height: 60vh;
+}
+
+@media (min-width: 700px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(36px, 4vw, 56px) clamp(16px, 1.6vw, 24px);
+  }
+}
+
+/* Nine works: three rows of three on a laptop and wider, the Gevirtz wall. */
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  scroll-margin: 24px;
+}
+
+.card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+.card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.card__media img,
+.card__loop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card__media img {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.card__media.is-loaded img {
+  opacity: 1;
+}
+
+/* Keep the fade in step with FADE_MS in home.js. */
+.card__loop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+.card__loop.is-on {
+  opacity: 1;
+}
+
+.card__cap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 10px;
+  margin-top: 14px;
+  font-size: 16px;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+}
+
+.card__title {
+  font-weight: 500;
+}
+
+.card__kind {
+  color: var(--fg-dim);
+}
+
+@media (hover: hover) {
+  .card__link:hover .card__title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.24em;
+  }
+}
+
+.card__link:focus-visible {
+  outline: none;
+}
+
+.card__link:focus-visible .card__media {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.more {
+  padding: clamp(36px, 4.4vw, 56px) var(--gutter) 0;
+  font-size: 16px;
+}
+
+.more a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+  text-decoration-color: var(--line);
+  transition: text-decoration-color 0.2s ease;
+}
+
+.more a:hover {
+  text-decoration-color: currentColor;
+}
+
+.more__note {
+  color: var(--fg-dim);
+}

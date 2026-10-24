@@ -1,0 +1,7 @@
+# Old versions kept on disk, never published.
+_replaced/
+.DS_Store
+# Hidden in works.js since 24.10. To show again: delete these two lines, drop hidden: true there
+# and add the work back to WORKS in make_pages.py.
+works/vera-borisovna.html
+media/vera-borisovna/

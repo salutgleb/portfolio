@@ -1,0 +1,562 @@
+/* Work page: top bar, the video stage sized to fit the screen whole, title and facts,
+   «Задача / Что делали / Итог», stills and the neighbouring works. */
+
+.work-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 20px;
+  padding: 0 var(--gutter) 8px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.work-nav a {
+  text-decoration: none;
+}
+
+.work-nav__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 0 auto 0 -4px;
+  padding-right: 6px;
+  border-radius: 8px;
+}
+
+.work-nav__all .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.work-nav__count {
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.work-nav__step {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.work-nav a:hover span:not(.visually-hidden),
+.work-nav__step:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 419px) {
+  .work-nav {
+    gap: 0 14px;
+  }
+
+  .work-nav__count {
+    display: none;
+  }
+}
+
+/* ---------- stage: as wide as the column, as tall as the screen allows with the bars around it ---------- */
+.stage {
+  padding: 0 var(--gutter);
+}
+
+.stage__inner {
+  --room: 196px; /* header, top bar and the bar under the player */
+  --stage-w: min(100%, calc((100vh - var(--room)) * var(--arw, 16) / var(--arh, 9)));
+}
+
+/* Phones with a toolbar: the small viewport keeps the whole film on screen. A custom property is
+   not checked when parsed, so the svh line needs its own @supports to leave the vh one for old browsers. */
+@supports (height: 100svh) {
+  .stage__inner {
+    --stage-w: min(100%, calc((100svh - var(--room)) * var(--arw, 16) / var(--arh, 9)));
+  }
+}
+
+@media (min-width: 700px) {
+  .stage__inner {
+    --room: 236px;
+  }
+}
+
+.player,
+.player-bar {
+  width: var(--stage-w);
+  margin-inline: auto;
+}
+
+/* A vertical film is narrow: the bar under it gets more room and centres its versions and quality. */
+.stage__inner.is-vertical .player-bar {
+  width: min(100%, 760px);
+  justify-content: center;
+}
+
+.player {
+  position: relative;
+  aspect-ratio: var(--arw, 16) / var(--arh, 9);
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--radius);
+  background: var(--screen);
+}
+
+.player__video,
+.player__embed,
+.player > img,
+.player__loop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.player__video {
+  object-fit: contain;
+  background: #000;
+}
+
+/* After «Смотреть» the keyboard focus moves onto the film: keep it visible inside the frame. */
+.player__video:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -4px;
+}
+
+.player > img,
+.player__loop {
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+
+.player.is-loaded > img,
+.player__loop.is-on {
+  opacity: 1;
+}
+
+.player__start {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(8, 7, 6, 0) 45%, rgba(8, 7, 6, 0.32));
+}
+
+.player__start-icon {
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 6.4vw, 88px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(243, 239, 231, 0.94);
+  color: #141310;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.28);
+  transition: transform 0.4s var(--ease-out), background-color 0.2s ease;
+}
+
+.player__start-icon .icon {
+  width: 40%;
+  height: 40%;
+  margin-left: 6%;
+  fill: currentColor;
+  stroke: none;
+}
+
+.player__start:hover .player__start-icon {
+  transform: scale(1.06);
+  background: #ffffff;
+}
+
+.player__start:focus-visible {
+  outline: none;
+}
+
+.player__start:focus-visible .player__start-icon {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.player__error {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px;
+  background: rgba(8, 7, 6, 0.82);
+  color: #f3efe7;
+  font-size: 16px;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* A film from Yandex Disk that did not come: the message and the way to watch it on Disk. */
+.player__error-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #ffffff;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+}
+
+/* ---------- under the player: what is playing, the versions and the quality ---------- */
+.player-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--fg-dim);
+}
+
+.player-bar__caption {
+  font-variant-numeric: tabular-nums;
+}
+
+.player-bar__side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.seg__item {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.seg__item:hover {
+  color: var(--fg);
+}
+
+.seg__item[aria-pressed="true"] {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: var(--raise);
+}
+
+.seg__item:focus-visible {
+  outline-offset: 1px;
+}
+
+/* Versions of a work (App Lite flavours, full episode and fragment): text tabs that wrap cleanly. */
+.seg--tabs {
+  gap: 2px 20px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.seg--tabs .seg__item {
+  min-height: 40px;
+  padding: 0;
+  border-radius: 0;
+  font-size: 15px;
+}
+
+.seg--tabs .seg__item[aria-pressed="true"] {
+  background: none;
+  box-shadow: none;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 7px;
+}
+
+.seg--tabs .seg__item:focus-visible {
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Many vertical films (App Lite): a strip of covers, sideways scroll on phones, one row on wide screens. */
+.reels {
+  display: flex;
+  flex: 1 0 100%;
+  gap: 8px;
+  margin: 0 -2px;
+  padding: 4px 2px 6px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.reels::-webkit-scrollbar {
+  display: none;
+}
+
+.reels__item {
+  flex: none;
+  width: 44px;
+  border-radius: 7px;
+  opacity: 0.55;
+  scroll-snap-align: center;
+  transition: opacity 0.2s ease;
+}
+
+.reels__item:hover {
+  opacity: 0.85;
+}
+
+.reels__item[aria-pressed="true"] {
+  opacity: 1;
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.reels__item:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.reels__thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 9 / 16;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--surface);
+}
+
+.reels__thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.reels__thumb.is-loaded img {
+  opacity: 1;
+}
+
+@media (min-width: 700px) {
+  .reels {
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .reels__item {
+    width: 48px;
+  }
+}
+
+/* ---------- title and facts ---------- */
+.work-head {
+  display: grid;
+  gap: 24px 40px;
+  padding: clamp(40px, 6vw, 88px) var(--gutter) 0;
+}
+
+.work-title {
+  max-width: 13em;
+  font-size: clamp(36px, 5.4vw, 80px);
+  line-height: 0.98;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.work-title:focus {
+  outline: none;
+}
+
+.facts {
+  display: grid;
+  gap: 8px;
+}
+
+.facts__row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.facts dd {
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+@media (min-width: 900px) {
+  .work-head {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+  }
+}
+
+/* ---------- task, what we did, result ---------- */
+.sar {
+  display: grid;
+  margin: clamp(36px, 5vw, 64px) var(--gutter) 0;
+}
+
+.sar__item {
+  padding: 16px 0 22px;
+  border-top: 1px solid var(--line);
+}
+
+.sar dt {
+  margin-bottom: 10px;
+}
+
+.sar dd {
+  max-width: 32ch;
+  font-size: clamp(18px, 1.45vw, 21px);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+@media (min-width: 900px) {
+  .sar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* ---------- stills ---------- */
+.stills {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: clamp(40px, 6vw, 96px) var(--gutter) 0;
+}
+
+.still {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.still:first-child {
+  grid-column: 1 / -1;
+}
+
+.still img,
+.pager__thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.still.is-loaded img,
+.pager__thumb.is-loaded img {
+  opacity: 1;
+}
+
+@media (min-width: 900px) {
+  .stills {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .still:first-child {
+    grid-column: auto;
+  }
+}
+
+/* ---------- previous and next work ---------- */
+.pager {
+  display: grid;
+  gap: 20px;
+  margin: clamp(64px, 9vw, 136px) var(--gutter) 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.pager__link {
+  display: grid;
+  grid-template-columns: minmax(104px, 34%) minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+.pager__thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 2px);
+  background: var(--surface);
+}
+
+.pager__label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.pager__title {
+  font-size: clamp(20px, 2vw, 28px);
+  line-height: 1.12;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+@media (hover: hover) {
+  .pager__link:hover .pager__title {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+}
+
+@media (min-width: 700px) {
+  .pager {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+  }
+
+  .pager__link--next {
+    grid-template-columns: minmax(0, 1fr) minmax(104px, 34%);
+    text-align: right;
+  }
+
+  .pager__link--next .pager__thumb {
+    order: 2;
+  }
+}
+
+.work-missing {
+  padding: 24px var(--gutter);
+  font-size: 20px;
+}

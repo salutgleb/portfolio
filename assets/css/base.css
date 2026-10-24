@@ -1,0 +1,596 @@
+/* SALUT portfolio, base layer: fonts, the theme tokens of wearesalut.com (light paper, dark night),
+   page frame, header, footer, buttons and the contact block. The grid is in grid.css, the work page
+   in work.css, the lead form (copied from the main site) in form.css. */
+
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("../fonts/intertight-cyrillic.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("../fonts/intertight-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ---------- themes: the same values as css/site.css of the main site ---------- */
+:root,
+:root[data-theme="light"] {
+  --bg: #eeeae2;
+  --fg: #141310;
+  --fg-dim: #5c574e;
+  --surface: #e4dfd5;
+  --line: #d2cbbf;
+  --btn-bg: #141310;
+  --btn-fg: #f3efe7;
+  --btn-hover: #2d2b27;
+  --focus: #e0502a;
+  --accent: #e0502a;
+  --accent-text: #a83a1b;
+  --raise: 0 1px 3px rgba(20, 19, 16, 0.14);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #151719;
+  --fg: #f3efe7;
+  --fg-dim: #aaa59b;
+  --surface: #1e2124;
+  --line: #2b2e31;
+  --btn-bg: #f3efe7;
+  --btn-fg: #141310;
+  --btn-hover: #ffffff;
+  --focus: #f7c531;
+  --accent-text: #f0643c;
+  --raise: 0 1px 3px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+/* Without JavaScript the page follows the system. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151719;
+    --fg: #f3efe7;
+    --fg-dim: #aaa59b;
+    --surface: #1e2124;
+    --line: #2b2e31;
+    --btn-bg: #f3efe7;
+    --btn-fg: #141310;
+    --btn-hover: #ffffff;
+    --focus: #f7c531;
+    --accent-text: #f0643c;
+    --raise: 0 1px 3px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+
+:root {
+  --gutter: 16px;
+  --radius: 10px;
+  --screen: #0b0a09; /* behind films and loops, the same in both themes */
+  --font: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 700px) {
+  :root {
+    --gutter: 32px;
+    --radius: 12px;
+  }
+}
+
+@media (min-width: 1100px) {
+  :root {
+    --gutter: 56px;
+  }
+}
+
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 17px/1.55 var(--font);
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 700px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+video,
+iframe {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--accent);
+  color: #141310;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Small caps label, as on the main site. */
+.label {
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+/* Facts that still wait for Gleb's confirmation: underlined only with ?review=1 in the address. */
+.review .tbc {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 0.2em;
+}
+
+.skip {
+  position: absolute;
+  z-index: 20;
+  left: 8px;
+  top: -200px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.skip:focus {
+  top: 8px;
+}
+
+.noscript {
+  max-width: 40em;
+  padding: 24px var(--gutter);
+  color: var(--fg-dim);
+}
+
+/* ---------- buttons, as on the main site (the lead form uses them) ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font: 500 16px/1.1 var(--font);
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--btn-hover);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--fg);
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.btn--ghost:hover {
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+@media (min-width: 700px) {
+  .btn {
+    min-height: 56px;
+    padding: 0 30px;
+    font-size: 17px;
+  }
+}
+
+/* ---------- header: the June spark logo, «Портфолио», the way home and to the contact ---------- */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: max(16px, env(safe-area-inset-top)) var(--gutter) 12px;
+}
+
+.top__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-right: auto;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.logo {
+  display: block;
+  width: auto;
+  height: 30px;
+}
+
+.logo--dark,
+:root[data-theme="dark"] .logo--light {
+  display: none;
+}
+
+:root[data-theme="dark"] .logo--dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .logo--light {
+    display: none;
+  }
+
+  :root:not([data-theme]) .logo--dark {
+    display: block;
+  }
+}
+
+.top__section {
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 500;
+  color: var(--fg-dim);
+}
+
+.top__nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.top__nav a:hover,
+.footer a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  border-radius: 999px;
+  color: var(--fg);
+}
+
+.theme-toggle .icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* On phones the header keeps its two links; the theme switch moves to the footer. */
+.top .theme-toggle {
+  display: none;
+}
+
+@media (min-width: 560px) {
+  .top .theme-toggle {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 700px) {
+  .top {
+    gap: 4px 28px;
+    padding-top: 28px;
+    padding-bottom: 20px;
+  }
+
+  .top__brand {
+    gap: 16px;
+  }
+
+  .logo {
+    height: 42px;
+  }
+
+  .top__section {
+    padding-left: 16px;
+    font-size: 16px;
+  }
+
+  .top__nav {
+    gap: 24px;
+  }
+
+  .top__nav a {
+    font-size: 16px;
+  }
+}
+
+/* Small phones: the brand and both links still share one row from 375 px up. */
+@media (max-width: 389px) {
+  .top {
+    column-gap: 10px;
+  }
+
+  .top__nav {
+    gap: 12px;
+  }
+
+  .top__nav a,
+  .top__section {
+    font-size: 14.5px;
+  }
+}
+
+/* ---------- contact: heading, Telegram and phone beside the form ---------- */
+.contact {
+  display: grid;
+  gap: 28px;
+  margin-top: clamp(72px, 10vw, 144px);
+  padding: clamp(48px, 7vw, 104px) var(--gutter) clamp(56px, 8vw, 112px);
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 12px;
+}
+
+.contact__title {
+  max-width: 11em;
+  font-size: clamp(32px, 3.8vw, 54px);
+  line-height: 1.04;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.contact__lead {
+  max-width: 34ch;
+  margin-top: 16px;
+  color: var(--fg-dim);
+  text-wrap: pretty;
+}
+
+.contact__direct {
+  display: grid;
+  justify-items: start;
+  gap: 0;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contact__direct a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: clamp(19px, 1.6vw, 22px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+  text-decoration-color: var(--line);
+  transition: text-decoration-color 0.2s ease;
+}
+
+.contact__direct a:hover {
+  text-decoration-color: currentColor;
+}
+
+.contact .lead-form {
+  max-width: 40rem;
+  margin-top: 0;
+}
+
+/* Telegram and phone already stand beside the heading; the form's own copy of them would repeat it. */
+.contact .lead-form__direct {
+  display: none;
+}
+
+.contact__after a {
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  .contact {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    column-gap: clamp(40px, 6vw, 112px);
+    align-items: start;
+  }
+}
+
+/* ---------- footer ---------- */
+.footer {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 40px var(--gutter) max(44px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.footer__brand {
+  display: block;
+  color: var(--fg);
+}
+
+.footer__brand .logo {
+  height: 40px;
+}
+
+/* The one pixel detail of the portfolio: the June spark, drawn on a 9 px grid. */
+.spark {
+  display: block;
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+  shape-rendering: crispEdges;
+}
+
+.footer__line {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.footer__line a,
+.footer__links a {
+  display: inline-block;
+  padding: 6px 0;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.footer__links {
+  font-size: 14px;
+  color: var(--fg-dim);
+}
+
+.footer .theme-toggle {
+  display: inline-flex;
+  width: auto;
+  gap: 8px;
+  margin: 0;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg-dim);
+}
+
+.footer .theme-toggle .icon {
+  width: 18px;
+  height: 18px;
+}
+
+@media (min-width: 560px) {
+  .footer .theme-toggle {
+    display: none;
+  }
+}
+
+/* ---------- motion: pages cross-fade, the card grows into the player (Chrome, Safari 18.2+) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: 0.42s;
+    animation-timing-function: var(--ease-out);
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

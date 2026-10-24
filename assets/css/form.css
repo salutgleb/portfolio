@@ -1,0 +1,413 @@
+/* Lead form (js/lead-form.js) in the contact section. Colours, font and buttons come from the
+   site's tokens in site.css; the form adds a field fill, a field outline and an error colour per
+   theme. Contrast against the page: outline 3.4:1 light and 4.2:1 dark, error text 5.9:1 light
+   and 7.9:1 dark. Calm on purpose: contact is the serious part of the page. */
+
+.lead-form {
+  --lf-field: #f8f6f1;
+  --lf-border: #857d71;
+  --lf-error: #a8261b;
+  container: lead-form / inline-size;
+  width: 100%;
+  max-width: 40rem;
+  margin-top: 28px;
+}
+
+:root[data-theme="dark"] .lead-form {
+  --lf-field: #1b1e21;
+  --lf-border: #767b80;
+  --lf-error: #ff8a7d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lead-form {
+    --lf-field: #1b1e21;
+    --lf-border: #767b80;
+    --lf-error: #ff8a7d;
+  }
+}
+
+.lead-form [hidden] {
+  display: none !important;
+}
+
+.lead-form p,
+.lead-form h3 {
+  margin: 0;
+}
+
+.lead-form__form,
+.lead-form__fields {
+  display: grid;
+  gap: 24px;
+}
+
+.lead-form__field,
+.lead-form__group {
+  display: grid;
+  align-content: start; /* an error under one field of a pair must not stretch the other one */
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.lead-form__label {
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--fg);
+}
+
+.lead-form__group > .lead-form__label {
+  margin-bottom: 2px; /* legend: no flex gap above the hint */
+}
+
+.lead-form__sublabel {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--fg-dim);
+}
+
+.lead-form__hint {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--fg-dim);
+}
+
+.lead-form__optional {
+  margin-left: 4px;
+  font-weight: 400;
+  color: var(--fg-dim);
+}
+
+.lead-form__pair {
+  display: grid;
+  align-items: start;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+@container lead-form (min-width: 520px) {
+  .lead-form__pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Fields */
+.lead-form__input {
+  width: 100%;
+  min-height: 52px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1.5px solid var(--lf-border);
+  border-radius: var(--radius, 12px);
+  background: var(--lf-field);
+  color: var(--fg);
+  font: 400 17px/1.35 var(--font);
+  letter-spacing: 0;
+  caret-color: var(--fg);
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lead-form__input::placeholder {
+  color: var(--fg-dim);
+  opacity: 1;
+}
+
+.lead-form__input:focus {
+  border-color: var(--fg);
+}
+
+.lead-form__input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .lead-form__input:hover:not(:focus):not(:disabled):not([aria-invalid="true"]) {
+    border-color: var(--fg);
+  }
+}
+
+.lead-form__input[aria-invalid="true"] {
+  border-color: var(--lf-error);
+  box-shadow: inset 0 0 0 1px var(--lf-error);
+}
+
+.lead-form__input:disabled {
+  cursor: not-allowed;
+}
+
+.lead-form__textarea {
+  min-height: 124px;
+  max-height: 360px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.lead-form__select {
+  position: relative;
+}
+
+.lead-form__select .lead-form__input {
+  padding-right: 48px;
+  cursor: pointer;
+}
+
+/* The disabled first option «Выберите формат» reads as a placeholder until a format is picked. */
+.lead-form__select .lead-form__input:invalid {
+  color: var(--fg-dim);
+}
+
+.lead-form__select option {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.lead-form__chevron {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 14px;
+  height: 8px;
+  margin-top: -4px;
+  color: var(--fg);
+  pointer-events: none;
+  shape-rendering: crispEdges;
+}
+
+.lead-form__count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg-dim);
+}
+
+/* Consent */
+.lead-form__consent {
+  display: grid;
+  gap: 6px;
+}
+
+.lead-form__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lead-form__checkbox {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--fg);
+  cursor: pointer;
+}
+
+.lead-form__checkbox:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.lead-form__checkbox[aria-invalid="true"] {
+  outline: 2px solid var(--lf-error);
+  outline-offset: 2px;
+}
+
+.lead-form__check label {
+  padding-top: 1px;
+  font-size: 16px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.lead-form__policy {
+  padding-left: 36px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.lead-form__consent > .lead-form__error {
+  padding-left: 36px;
+}
+
+/* Errors: text first, colour second, a pixel square like the site's list bullets. */
+.lead-form__error {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: var(--lf-error);
+}
+
+.lead-form__error::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  transform: translateY(-1px);
+}
+
+/* Links in the form text */
+.lead-form__link {
+  color: var(--fg);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.lead-form__link:hover {
+  text-decoration-thickness: 2px;
+}
+
+.lead-form__link:focus-visible,
+.lead-form .btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.lead-form__nowrap {
+  white-space: nowrap;
+}
+
+/* Honeypot: off screen for people, still in the form for bots. */
+.lead-form__hp {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Submit, status and the direct contacts */
+.lead-form__foot {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
+.lead-form__submit[aria-disabled="true"] {
+  opacity: 0.72;
+  cursor: progress;
+}
+
+.lead-form__status {
+  max-width: 34rem;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--fg-dim);
+}
+
+.lead-form__status:empty {
+  display: none;
+}
+
+.lead-form__status.is-error {
+  color: var(--lf-error);
+}
+
+.lead-form__status.is-error .lead-form__link {
+  color: inherit;
+}
+
+.lead-form__direct {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--fg-dim);
+}
+
+@container lead-form (max-width: 519px) {
+  .lead-form__submit,
+  .lead-form__actions .btn {
+    width: 100%;
+  }
+}
+
+/* Not connected yet: the fields stay visible but inactive, the buttons go straight to Gleb. */
+.lead-form__form[data-state="offline"] .lead-form__fields {
+  opacity: 0.55;
+}
+
+.lead-form__offline,
+.lead-form__done {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  padding: 22px 20px;
+  border-radius: var(--radius, 12px);
+  background: var(--surface);
+}
+
+.lead-form__offline-text {
+  font-size: 17px;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.lead-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  width: 100%;
+}
+
+/* Sent */
+.lead-form__done-title {
+  font-size: clamp(22px, 2.2vw, 28px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.lead-form__done-title:focus {
+  outline: none; /* focused by the script so screen readers read it; it is not a control */
+}
+
+.lead-form__done-title::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 12px;
+  background: var(--accent);
+  vertical-align: 0.12em;
+}
+
+.lead-form__id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.lead-form__done-text {
+  max-width: 32rem;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.lead-form__done-note {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--fg-dim);
+}
+
+@media (min-width: 700px) {
+  .lead-form__offline,
+  .lead-form__done {
+    padding: 28px 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lead-form__input {
+    transition: none;
+  }
+}
