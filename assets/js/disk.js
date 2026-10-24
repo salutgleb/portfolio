@@ -11,11 +11,6 @@ const TIMEOUT_MS = 15000;
 const LINK_TTL_MS = 20 * 60 * 1000; // an older link is asked for again before playing
 const LINK_HOST = /^https:\/\/([a-z0-9-]+\.)*yandex\.(ru|net)\//;
 
-/** The file in the Disk web interface, for «Открыть на Яндекс Диске». */
-export function diskPage(path) {
-  return YDISK + String(path).split('/').map(encodeURIComponent).join('/');
-}
-
 async function requestLink(path) {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS);

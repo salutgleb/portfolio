@@ -11,24 +11,35 @@ const CARD_SIZES = '(min-width: 1200px) 33vw, (min-width: 700px) 50vw, 100vw';
 // the first two cards are half the width.
 const WIDE_CARD_SIZES = '(min-width: 700px) 50vw, 100vw';
 const EAGER_CARDS = 3; // the first row loads at once, the rest when scrolled near
+// Cards seen without scrolling: the first one gets its poster first, the ones below the first screen wait.
+const CARDS_ON_FIRST_SCREEN = window.matchMedia('(min-width: 1200px)').matches ? 5
+  : window.matchMedia('(min-width: 700px)').matches ? 4 : 2;
+// Desktop: after load only the loops of the first row are fetched (their first hover starts at once), the rest on
+// hover. Fetching all eight (8 MB) kept the page out of the browser's Back cache while they downloaded.
+const WARM_CARDS = 2;
+// A large first-row card on a wide screen plays the 1280 px loop; every other card the 960 px one.
+const LARGE_LOOP = '(min-width: 1200px)';
 const IN_VIEW = 0.6; // touch screens: a frame at least this much on screen may play
-const PRELOAD_MARGIN = '300px'; // desktop: cards this close to the screen fetch their loop in advance
 const FADE_MS = 450; // keep in step with .card__loop in grid.css
 
 function card(work, index) {
   const wide = SHOWN.length % 3 === 2 && index < 2;
   const media = h('span', { class: 'card__media', style: 'view-transition-name: work-' + work.slug });
+  // The first card's poster is also asked for in <head> (make_pages.py): srcset and sizes must stay identical there.
   media.append(picture({
     src: mediaPath(work.slug, 'poster'),
-    srcset: mediaPath(work.slug, 'poster-960') + ' 960w, ' + mediaPath(work.slug, 'poster') + ' 1920w',
+    srcset: mediaPath(work.slug, 'poster-960') + ' 960w, ' + mediaPath(work.slug, 'poster-1280') + ' 1280w, '
+      + mediaPath(work.slug, 'poster') + ' 1920w',
     sizes: wide ? WIDE_CARD_SIZES : CARD_SIZES,
     alt: '',
     width: 1920,
     height: 1080,
     eager: index < EAGER_CARDS,
+    priority: index === 0 ? 'high' : index >= CARDS_ON_FIRST_SCREEN ? 'low' : undefined,
     box: media,
   }));
-  return h('li', { class: 'card', id: work.slug }, h('a', { class: 'card__link', href: rootPath() + 'works/' + work.slug + '.html' }, [
+  const loop = wide && window.matchMedia(LARGE_LOOP).matches ? 'loop' : 'loop-960';
+  return h('li', { class: 'card', id: work.slug, 'data-loop': loop }, h('a', { class: 'card__link', href: rootPath() + 'works/' + work.slug + '.html' }, [
     media,
     h('span', { class: 'card__cap' }, [
       h('span', { class: 'card__title' }, typo(plain(work.title))),
@@ -44,7 +55,8 @@ function loopFor(link) {
   let video = media.querySelector('.card__loop');
   if (video) return video;
   video = silentLoop('card__loop');
-  video.src = mediaPath(link.closest('.card').id, 'loop', '.mp4');
+  const card = link.closest('.card');
+  video.src = mediaPath(card.id, card.dataset.loop || 'loop', '.mp4');
   video.addEventListener('playing', () => video.classList.add('is-on'));
   video.addEventListener('error', () => video.remove(), { once: true });
   media.append(video);
@@ -75,18 +87,10 @@ function hoverLoops(links) {
     link.addEventListener('focus', () => play(link));
     link.addEventListener('blur', () => stop(link));
   });
-  // Fetch the loops of cards near the screen once the page itself has loaded: the first hover starts at once.
-  const warm = () => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const video = loopFor(entry.target);
-        if (video.preload !== 'auto') video.preload = 'auto';
-        observer.unobserve(entry.target);
-      });
-    }, { rootMargin: PRELOAD_MARGIN });
-    links.forEach((link) => observer.observe(link));
-  };
+  // Once the page itself has loaded, fetch the loops of the first row only: their first hover starts at once.
+  const warm = () => links.slice(0, WARM_CARDS).forEach((link) => {
+    loopFor(link).preload = 'auto';
+  });
   if (document.readyState === 'complete') warm();
   else window.addEventListener('load', warm, { once: true });
 }

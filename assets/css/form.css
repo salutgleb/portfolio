@@ -250,6 +250,11 @@
     margin-block: -6px -11px; /* up: the 6 px grid gap, so the link box does not cover the label; down: free space */
   }
 
+  /* Once the consent error shows under the link, that space is taken: the link box must not cover the error. */
+  .lead-form__consent:has(> .lead-form__error:not([hidden])) .lead-form__policy {
+    margin-bottom: 0;
+  }
+
   .lead-form__policy .lead-form__link {
     display: inline-flex;
     align-items: center;

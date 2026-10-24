@@ -3,7 +3,7 @@
 //
 // Порядок в списке = порядок в сетке и в «Предыдущая / Следующая»: сильные работы первыми.
 // Тот же порядок в WORKS генератора оболочек make_pages.py.
-// hidden: true убирает работу из сетки и листания; её файлы в публикацию не идут (GITIGNORE генератора).
+// hidden: true убирает работу из сетки и листания.
 // Новая работа: запись здесь, папка media/<slug>/ и копия любой страницы works/*.html
 // с новым slug в <body data-slug="…"> и новыми title и og-тегами в <head>.
 //
@@ -81,7 +81,7 @@ export const WORKS = Object.freeze([
     slug: 'miu-miu-new-balance',
     title: 'MIU MIU × New Balance 530', //  : «New Balance» never splits across lines
     kind: 'Обзор для YouTube',
-    client: 'nolimit, YouTube-канал',
+    client: 'nolimit, YouTube‑канал', // non-breaking hyphen: «YouTube-» and «канал» never split
     format: 'Обзор в студии',
     role: '',
     task: '{{Снять обзор коллаборации.}}',
@@ -225,27 +225,6 @@ export const WORKS = Object.freeze([
     stills: [],
     films: [
       { id: 'film', label: 'Ролик', duration: '0:15', ratio: '9/16', levels: [720], poster: 'poster-v' },
-    ],
-    embed: '',
-    embedLabel: '',
-    embedDuration: '',
-  },
-  {
-    slug: 'vera-borisovna',
-    // Скрыта: в сетке и листании её нет, файлы не публикуются.
-    hidden: true,
-    title: 'Вера Борисовна',
-    kind: 'Монолог на камеру',
-    client: '',
-    format: '{{Монолог на камеру, сцены приёма}}',
-    role: '',
-    task: '',
-    did: '{{Монолог на камеру в кабинете и сцены приёма.}}',
-    result: '',
-    stills: ['still-1', 'still-2', 'still-3'],
-    films: [
-      { id: 'film-1', label: 'Одна минута', duration: '1:00', ratio: '16/9', levels: [720], poster: 'p-1' },
-      { id: 'film-2', label: 'Видео 1', duration: '2:56', ratio: '16/9', levels: [720], poster: 'p-2' },
     ],
     embed: '',
     embedLabel: '',

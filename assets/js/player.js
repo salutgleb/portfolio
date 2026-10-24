@@ -8,7 +8,7 @@
 // Nothing plays with sound until the visitor presses play.
 
 import { h, icon, typo, plain, mediaPath, silentLoop, tryPlay, calmMode, picture } from './dom.js';
-import { diskFile, diskPage } from './disk.js';
+import { diskFile } from './disk.js';
 
 const HLS_LIB = new URL('./hls.light.min.js', import.meta.url).href;
 const HLS_TYPE = 'application/vnd.apple.mpegurl';
@@ -29,13 +29,14 @@ const TEXT = Object.freeze({
   error: 'Видео не загрузилось. Обновите страницу или напишите Глебу:',
   telegram: 'Telegram @imglebsmirnov',
   diskError: 'Видео с Яндекс Диска не загрузилось.',
-  openDisk: 'Открыть на Яндекс Диске',
+  diskWrite: 'Написать Глебу в Telegram',
   quality: 'Качество',
   qualityGroup: 'Качество видео',
   auto: 'Авто',
   tabs: 'Выбор видео',
   stage: 'Видео',
   separator: ' · ',
+  watchOwn: 'Смотреть: ',
   pauseLoop: 'Поставить видео на паузу',
   playLoop: 'Продолжить видео',
   loopAlt: ', кадр из ролика',
@@ -308,6 +309,7 @@ function filmView(work, film, ctx) {
   const stream = createStream(video, mediaPath(work.slug, film.id + '/', ''), {
     quality: ctx.quality(),
     onFail: () => {
+      video.controls = false; // no native bar and spinner under the message
       error.hidden = false;
       button.hidden = true;
     },
@@ -341,10 +343,9 @@ function diskView(work, film, ctx) {
     poster: filmPoster(work, film),
     'aria-label': plain(work.title) + TEXT.separator + film.label,
   });
-  const error = h('p', { class: 'player__error', role: 'alert', hidden: true }, [
-    h('span', null, typo(TEXT.diskError)),
-    h('a', { class: 'player__error-link', href: diskPage(film.ydisk), target: '_blank', rel: 'noopener' }, typo(TEXT.openDisk)),
-  ]);
+  // No link into the Disk folder here: the shared folder holds more than the site shows.
+  const write = h('a', { class: 'player__error-link', href: TELEGRAM_URL, rel: 'noopener' }, typo(TEXT.diskWrite));
+  const error = h('p', { class: 'player__error', role: 'alert', hidden: true }, [h('span', null, typo(TEXT.diskError)), write]);
   const button = startButton({ type: 'disk', film });
   const file = diskFile(film.ydisk);
   const state = { started: false, retries: 0, destroyed: false, timer: 0 };
@@ -352,6 +353,14 @@ function diskView(work, film, ctx) {
   const disarm = () => {
     window.clearTimeout(state.timer);
     state.timer = 0;
+  };
+  // The Disk did not answer: the visitor may watch the film that lives on this site instead.
+  const offerOwnFilm = () => {
+    const own = ctx.ownFilm();
+    if (!own || error.querySelector('[data-own]')) return;
+    const choose = h('button', { type: 'button', class: 'player__error-link', 'data-own': '' }, typo(TEXT.watchOwn + own.label));
+    choose.addEventListener('click', own.open);
+    error.insertBefore(choose, write);
   };
   const fail = (reason) => {
     if (state.destroyed) return;
@@ -363,6 +372,7 @@ function diskView(work, film, ctx) {
     video.controls = false;
     button.hidden = true;
     error.hidden = false;
+    offerOwnFilm();
   };
   const play = (href) => {
     if (state.destroyed) return;
@@ -515,8 +525,17 @@ export function mountStage(container, work) {
   container.append(inner);
 
   const state = { index: -1, view: null, quality: 'auto', qualityGroup: null, tabs: null, strip: null, caption: null, engaged: false };
-  const ctx = { quality: () => state.quality, engage: () => { state.engaged = true; } };
-  player.addEventListener('keydown', (event) => onFilmKey(event, player));
+  const ctx = {
+    quality: () => state.quality,
+    engage: () => { state.engaged = true; },
+    // The work's own film on this site, offered when a film from the Disk does not come.
+    ownFilm: () => {
+      const index = sources.findIndex((source) => source.type === 'hls');
+      return index === -1 ? null : { label: labelOf(sources[index]), open: () => show(index) };
+    },
+  };
+  // On the whole stage: after a click on a version or a quality the focus sits in the bar, not on the film.
+  inner.addEventListener('keydown', (event) => onFilmKey(event, player));
   window.addEventListener('pagehide', () => { if (state.view && state.view.stream) state.view.stream.suspend(); });
   window.addEventListener('pageshow', (event) => { if (event.persisted && state.view && state.view.stream) state.view.stream.resume(); });
   const vertical = sources.every((source) => source.type !== 'embed' && source.film.ratio === '9/16');
@@ -604,22 +623,29 @@ function pauseToggle(onChange) {
 /** A work without a film: its silent loop over the poster, a pause button, paused off screen. */
 function mountLoop(container, work) {
   const player = h('div', { class: 'player player--loop', style: 'view-transition-name: work-' + work.slug });
-  player.append(picture({
+  // Also asked for in <head> (make_pages.py, FIRST_POSTER "loop"): srcset and sizes must stay identical there.
+  const poster = picture({
     src: mediaPath(work.slug, 'poster'),
-    srcset: mediaPath(work.slug, 'poster-960') + ' 960w, ' + mediaPath(work.slug, 'poster') + ' 1920w',
+    srcset: mediaPath(work.slug, 'poster-960') + ' 960w, ' + mediaPath(work.slug, 'poster-1280') + ' 1280w, '
+      + mediaPath(work.slug, 'poster') + ' 1920w',
     sizes: '100vw',
     alt: plain(work.title) + TEXT.loopAlt,
     width: 1920,
     height: 1080,
     eager: true,
+    priority: 'high',
     box: player,
-  }));
+  });
+  player.append(poster);
   container.append(h('div', { class: 'stage__inner stage__inner--loop' }, player));
   if (calmMode() || typeof IntersectionObserver !== 'function') return;
 
   const video = silentLoop('player__loop');
-  video.src = mediaPath(work.slug, 'loop', '.mp4');
   video.preload = 'auto';
+  // The loop starts loading once the poster is in: its two megabytes must not share the channel with the first picture.
+  const attach = () => { video.src = mediaPath(work.slug, 'loop', '.mp4'); };
+  if (poster.complete) attach();
+  else ['load', 'error'].forEach((type) => poster.addEventListener(type, attach, { once: true }));
   const state = { paused: false, visible: false };
   const sync = () => (state.visible && !state.paused ? tryPlay(video) : video.pause());
   const toggle = pauseToggle((paused) => {

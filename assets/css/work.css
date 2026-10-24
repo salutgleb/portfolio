@@ -132,6 +132,19 @@
   .stage__inner:has(.reels) {
     --room: 64px;
   }
+
+  /* A vertical film: its minimum width must not make it taller than the screen. */
+  .stage__inner.is-vertical {
+    --stage-min: min(14rem, calc((100vh - 16px) * 9 / 16));
+  }
+}
+
+@supports (height: 100svh) {
+  @media (orientation: landscape) and (max-height: 560px) {
+    .stage__inner.is-vertical {
+      --stage-min: min(14rem, calc((100svh - 16px) * 9 / 16));
+    }
+  }
 }
 
 .player,
@@ -517,7 +530,7 @@
    From 700 px only: on phones half an em is more than the side margin. */
 @media (min-width: 700px) {
   .work-title--quote {
-    text-indent: -0.5em;
+    text-indent: max(-0.5em, calc(12px - var(--gutter))); /* the quote keeps 12 px from the window edge */
   }
 }
 

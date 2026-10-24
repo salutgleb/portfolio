@@ -24,7 +24,7 @@ const LIMITS = Object.freeze({
   messageMax: 1000,
   counterFrom: 200, // the counter shows up when this many characters or fewer are left
   minElapsedMs: 3000, // the backend takes a faster form for a bot and drops it
-  timeoutMs: 40000, // Apps Script can take 20 s and more on a cold start (first test lead 23.10 timed out at 20 s but arrived)
+  timeoutMs: 40000, // Apps Script can take 20 s and more on a cold start
 });
 
 const NICK_RE = /^[A-Za-z0-9_]{5,32}$/;
@@ -623,7 +623,11 @@ function restoreDraft(form) {
   if (!draft) return;
   DRAFT_FIELDS.forEach((name) => {
     const input = control(form, name);
-    if (input.value === '' && typeof draft[name] === 'string') input.value = draft[name];
+    const saved = draft[name];
+    if (typeof saved !== 'string') return;
+    // The format the visitor chose beats the one a work page preset; other fields keep what the browser restored.
+    const chosen = name === 'kind' ? FORMATS.some((format) => format.value === saved) : input.value === '';
+    if (chosen) input.value = saved;
   });
   updateCounter(form);
 }

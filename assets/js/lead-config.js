@@ -1,6 +1,5 @@
-// Settings of the lead form (js/lead-form.js). Both stay empty until Gleb deploys the backend
-// (pixel-site/backend/README.md). While ENDPOINT is empty the form shows Gleb's Telegram and
-// phone instead of a submit button.
+// Settings of the lead form (lead-form.js). While ENDPOINT is empty the form shows Gleb's Telegram
+// and phone instead of a submit button.
 // ENDPOINT      the Apps Script web app address, ends with /exec.
 // BOT_USERNAME  the bot without @, a fallback for the «Открыть бота» link (the backend names it too).
 // No tokens or secrets here: this file is public.

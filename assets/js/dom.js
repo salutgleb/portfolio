@@ -94,8 +94,9 @@ export function icon(name, className) {
 /**
  * An image that keeps its box before it loads and fades in once it has (class is-loaded on the box).
  * A missing file leaves a quiet empty box instead of a broken-image icon.
+ * priority: 'high' for the first picture a visitor sees, 'low' for the ones below the first screen.
  * @param {{ src: string, srcset?: string, sizes?: string, alt?: string, width: number, height: number,
- *           eager?: boolean, box: HTMLElement }} opts
+ *           eager?: boolean, priority?: 'high' | 'low', box: HTMLElement }} opts
  */
 export function picture(opts) {
   const img = document.createElement('img');
@@ -104,6 +105,7 @@ export function picture(opts) {
   img.height = opts.height;
   img.decoding = 'async';
   img.loading = opts.eager ? 'eager' : 'lazy';
+  if (opts.priority) img.setAttribute('fetchpriority', opts.priority);
   img.addEventListener('load', () => opts.box.classList.add('is-loaded'), { once: true });
   img.addEventListener('error', () => {
     if (img.hasAttribute('srcset')) {

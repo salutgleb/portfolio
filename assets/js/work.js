@@ -30,7 +30,7 @@ const TEXT = Object.freeze({
 // the format chosen in the form (lead-form.js reads data-kind of #lead-form when it mounts).
 const ASK = Object.freeze({
   studio: Object.freeze({
-    lead: 'Нужен такой же выпуск или интервью для вашего канала? Напишите тему, кто гость и к какой дате. Студию подберём сами, ответит Глеб.',
+    lead: 'Нужен такой же выпуск или интервью для вашего канала? Напишите тему, кто в кадре и к какой дате. Студию подберём сами, ответит Глеб.',
     kind: 'studio',
   }),
   event: Object.freeze({
@@ -108,12 +108,15 @@ function stills(work) {
   const title = plain(work.title);
   return h('div', { class: 'stills' }, work.stills.map((name, i) => {
     const box = h('figure', { class: 'still' });
+    // Below the film: smaller files and low priority, the film's own poster comes first.
     box.append(picture({
       src: mediaPath(work.slug, name),
+      srcset: mediaPath(work.slug, name + '-960') + ' 960w, ' + mediaPath(work.slug, name) + ' 1600w',
       sizes: STILL_SIZES,
       alt: fill(TEXT.still, { title, n: i + 1 }),
       width: 1600,
       height: 900,
+      priority: 'low',
       box,
     }));
     return box;
@@ -124,10 +127,12 @@ function pagerLink(target, label, rel) {
   const thumb = h('span', { class: 'pager__thumb' });
   thumb.append(picture({
     src: mediaPath(target.slug, 'poster-960'),
+    srcset: mediaPath(target.slug, 'poster-480') + ' 480w, ' + mediaPath(target.slug, 'poster-960') + ' 960w',
     sizes: PAGER_SIZES,
     alt: '',
     width: 960,
     height: 540,
+    priority: 'low',
     box: thumb,
   }));
   return h('a', { class: 'pager__link pager__link--' + rel, href: pageOf(target), rel }, [
@@ -181,6 +186,13 @@ function keyIsTaken(event) {
   return Boolean(target && target.closest('input, textarea, select, [contenteditable], video, iframe, .player, .seg, .reels, .lead-form'));
 }
 
+/** Esc goes back to the grid from anywhere, the film included, but not from a field or a full-screen film. */
+function escapeLeaves(event) {
+  if (event.key !== 'Escape' || event.defaultPrevented || document.fullscreenElement || document.webkitFullscreenElement) return false;
+  const target = event.target instanceof Element ? event.target : null;
+  return !(target && target.closest('input, textarea, select, [contenteditable], .lead-form'));
+}
+
 /** A film that plays keeps the arrows: they would throw the visitor out of it into the next work. */
 function filmPlays() {
   const film = document.querySelector('.player__video');
@@ -189,6 +201,11 @@ function filmPlays() {
 
 function wireKeys(work, prev, next) {
   document.addEventListener('keydown', (event) => {
+    if (escapeLeaves(event)) {
+      event.preventDefault();
+      close(work);
+      return;
+    }
     if (keyIsTaken(event)) return;
     if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && filmPlays()) return;
     if (event.key === 'ArrowLeft') window.location.href = pageOf(prev);
