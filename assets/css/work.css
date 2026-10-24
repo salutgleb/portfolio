@@ -58,6 +58,39 @@
   }
 }
 
+/* The work's name on the first screen of a wide page: after «Все работы», as «Портфолио» after the logo.
+   Phones and portrait tablets see the h1 on the first screen anyway. */
+.work-nav__title {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .work-nav__all {
+    margin-right: 0;
+  }
+
+  .work-nav__title {
+    display: flex;
+    align-items: baseline;
+    gap: 0 10px;
+    min-width: 0;
+    margin: 0 auto 0 0;
+    padding-left: 16px;
+    border-left: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  .work-nav__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .work-nav__kind {
+    color: var(--fg-dim);
+    font-weight: 400;
+  }
+}
+
 /* ---------- stage: as wide as the column, as tall as the screen allows with the bars around it ---------- */
 .stage {
   padding: 0 var(--gutter);
@@ -65,20 +98,39 @@
 
 .stage__inner {
   --room: 196px; /* header, top bar and the bar under the player */
-  --stage-w: min(100%, calc((100vh - var(--room)) * var(--arw, 16) / var(--arh, 9)));
+  --stage-min: 20rem; /* the film never gets narrower than this (zoom 200-400 %, a low window) */
+  --stage-w: clamp(min(100%, var(--stage-min)), calc((100vh - var(--room)) * var(--arw, 16) / var(--arh, 9)), 100%);
+}
+
+.stage__inner.is-vertical {
+  --stage-min: 14rem;
 }
 
 /* Phones with a toolbar: the small viewport keeps the whole film on screen. A custom property is
    not checked when parsed, so the svh line needs its own @supports to leave the vh one for old browsers. */
 @supports (height: 100svh) {
   .stage__inner {
-    --stage-w: min(100%, calc((100svh - var(--room)) * var(--arw, 16) / var(--arh, 9)));
+    --stage-w: clamp(min(100%, var(--stage-min)), calc((100svh - var(--room)) * var(--arw, 16) / var(--arh, 9)), 100%);
   }
 }
 
 @media (min-width: 700px) {
   .stage__inner {
     --room: 236px;
+  }
+
+  /* The strip of covers (App Lite) and its caption row also fit the first screen. */
+  .stage__inner:has(.reels) {
+    --room: 340px;
+  }
+}
+
+/* A phone held sideways: the bars above scroll away, the film takes the height of the screen.
+   After the rules above, so that it wins for the strip too. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .stage__inner,
+  .stage__inner:has(.reels) {
+    --room: 64px;
   }
 }
 
@@ -159,17 +211,20 @@
   transition: transform 0.4s var(--ease-out), background-color 0.2s ease;
 }
 
+/* The triangle about a third of the circle, as on the players people know. */
 .player__start-icon .icon {
-  width: 40%;
-  height: 40%;
-  margin-left: 6%;
+  width: 62%;
+  height: 62%;
+  margin-left: 7%;
   fill: currentColor;
   stroke: none;
 }
 
-.player__start:hover .player__start-icon {
-  transform: scale(1.06);
-  background: #ffffff;
+@media (hover: hover) {
+  .player__start:hover .player__start-icon {
+    transform: scale(1.06);
+    background: #ffffff;
+  }
 }
 
 .player__start:focus-visible {
@@ -179,6 +234,39 @@
 .player__start:focus-visible .player__start-icon {
   outline: 3px solid var(--focus);
   outline-offset: 4px;
+}
+
+/* Stops the silent loop of a work that has no film (CRACE). 44 px target, readable on any frame. */
+.player__pause {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(20, 19, 16, 0.66);
+  color: #f3efe7;
+}
+
+.player__pause .icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: none;
+}
+
+@media (hover: hover) {
+  .player__pause:hover {
+    background: rgba(20, 19, 16, 0.86);
+  }
+}
+
+.player__pause:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .player__error {
@@ -254,14 +342,21 @@
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.seg__item:hover {
-  color: var(--fg);
+@media (hover: hover) {
+  .seg__item:hover {
+    color: var(--fg);
+  }
 }
 
 .seg__item[aria-pressed="true"] {
   background: var(--bg);
   color: var(--fg);
   box-shadow: var(--raise);
+}
+
+/* Dark theme: the chosen quality is raised above its track, as in the light theme (the text tabs have no track). */
+:root[data-theme="dark"] .seg:not(.seg--tabs) .seg__item[aria-pressed="true"] {
+  background: var(--line);
 }
 
 .seg__item:focus-visible {
@@ -312,6 +407,13 @@
   display: none;
 }
 
+@media (max-width: 699px) {
+  .reels {
+    margin: 0 -4px;
+    padding: 4px 4px 6px; /* room for the 2 px ring and its 2 px offset: overflow-x clips the rest */
+  }
+}
+
 .reels__item {
   flex: none;
   width: 44px;
@@ -321,8 +423,10 @@
   transition: opacity 0.2s ease;
 }
 
-.reels__item:hover {
-  opacity: 0.85;
+@media (hover: hover) {
+  .reels__item:hover {
+    opacity: 0.85;
+  }
 }
 
 .reels__item[aria-pressed="true"] {
@@ -360,6 +464,23 @@
   opacity: 1;
 }
 
+/* The pressed switch is told apart by a background; high contrast drops it, so it takes the selection colours. */
+@media (forced-colors: active) {
+  .seg__item[aria-pressed="true"] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}
+
+/* A thumb needs 44 px: the quality switch is 34 px high, the version tabs 40. */
+@media (pointer: coarse) {
+  .seg__item,
+  .seg--tabs .seg__item {
+    min-height: 44px;
+  }
+}
+
 @media (min-width: 700px) {
   .reels {
     flex-wrap: wrap;
@@ -392,6 +513,14 @@
   outline: none;
 }
 
+/* A title that opens with «: the quote hangs in the margin, the letters keep the column edge.
+   From 700 px only: on phones half an em is more than the side margin. */
+@media (min-width: 700px) {
+  .work-title--quote {
+    text-indent: -0.5em;
+  }
+}
+
 .facts {
   display: grid;
   gap: 8px;
@@ -409,10 +538,16 @@
   line-height: 1.4;
 }
 
+/* The title over two of the three columns of «Задача / Что делали / Итог», the facts over the third. */
 @media (min-width: 900px) {
   .work-head {
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 16px;
     align-items: end;
+  }
+
+  .work-title {
+    grid-column: span 2;
   }
 }
 
@@ -489,6 +624,15 @@
 
   .still:first-child {
     grid-column: auto;
+  }
+
+  /* A single item does not leave two empty columns beside it. After .still:first-child above. */
+  .sar__item:only-child {
+    grid-column: 1 / -1;
+  }
+
+  .still:only-child {
+    grid-column: span 2;
   }
 }
 

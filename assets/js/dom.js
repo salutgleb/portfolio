@@ -3,9 +3,10 @@
 
 const NBSP = ' ';
 const NB_HYPHEN = '‑';
-// A word that should not hang at the end of a line: one or two letters, or a number
-// («в», «на», «6», «+7»). The same rule as typo() in lead-form.js.
-const SHORT_WORD = /^(?:[«„(]?[А-Яа-яЁёA-Za-z]{1,2}|\+?\d+)$/;
+// A word that should not hang at the end of a line: one or two letters, a number or the «×» of
+// a collaboration («в», «на», «6», «+7», «MIU MIU × New Balance»). lead-form.js has the same rule
+// without «×».
+const SHORT_WORD = /^(?:[«„(]?[А-Яа-яЁёA-Za-z]{1,2}|\+?\d+|×)$/;
 // «Balance 530»: a model number stays with the word before it.
 const LATIN_BEFORE_NUMBER = /([A-Za-z])\s+(?=\d)/g;
 const DIGIT_HYPHEN = /(\d)-(?=\d)/g;
@@ -15,6 +16,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const ICONS = Object.freeze({
   close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
   play: '<path d="M9 6.6v10.8L17.6 12z"/>',
+  pause: '<path d="M7 6h3.4v12H7zM13.6 6H17v12h-3.4z"/>',
   theme: '<circle cx="12" cy="12" r="7.5"/><path d="M12 4.5a7.5 7.5 0 0 1 0 15z" fill="currentColor" stroke="none"/>',
 });
 

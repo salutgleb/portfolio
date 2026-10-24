@@ -7,17 +7,21 @@ import { h, typo, plain, picture, calmMode, mediaPath, rootPath, silentLoop, try
 import { initTheme } from './theme.js';
 
 const CARD_SIZES = '(min-width: 1200px) 33vw, (min-width: 700px) 50vw, 100vw';
+// The first row of 2 + 3 + 3 (grid.css): with a count that leaves two in the last row of three,
+// the first two cards are half the width.
+const WIDE_CARD_SIZES = '(min-width: 700px) 50vw, 100vw';
 const EAGER_CARDS = 3; // the first row loads at once, the rest when scrolled near
 const IN_VIEW = 0.6; // touch screens: a frame at least this much on screen may play
 const PRELOAD_MARGIN = '300px'; // desktop: cards this close to the screen fetch their loop in advance
 const FADE_MS = 450; // keep in step with .card__loop in grid.css
 
 function card(work, index) {
+  const wide = SHOWN.length % 3 === 2 && index < 2;
   const media = h('span', { class: 'card__media', style: 'view-transition-name: work-' + work.slug });
   media.append(picture({
     src: mediaPath(work.slug, 'poster'),
     srcset: mediaPath(work.slug, 'poster-960') + ' 960w, ' + mediaPath(work.slug, 'poster') + ' 1920w',
-    sizes: CARD_SIZES,
+    sizes: wide ? WIDE_CARD_SIZES : CARD_SIZES,
     alt: '',
     width: 1920,
     height: 1080,

@@ -1,11 +1,9 @@
 // Работы портфолио SALUT. Один файл на всё: сетка на главной, страницы works/<slug>.html,
 // плееры и подписи под ними берут данные отсюда. Разметку для правок трогать не нужно.
 //
-// Порядок в списке = порядок в сетке и в «Предыдущая / Следующая». Сильные работы первыми:
-// 24.10 Глеб оставил CRACE первой и MIU MIU второй, третьей встала App Lite. Тот же порядок
-// в WORKS у portfolio-src/tools-v3/make_pages.py.
-// hidden: true убирает работу из сетки и листания, файлы остаются на диске. Чтобы они не ушли
-// в публикацию, их пути пишутся в GITIGNORE того же make_pages.py.
+// Порядок в списке = порядок в сетке и в «Предыдущая / Следующая»: сильные работы первыми.
+// Тот же порядок в WORKS генератора оболочек make_pages.py.
+// hidden: true убирает работу из сетки и листания; её файлы в публикацию не идут (GITIGNORE генератора).
 // Новая работа: запись здесь, папка media/<slug>/ и копия любой страницы works/*.html
 // с новым slug в <body data-slug="…"> и новыми title и og-тегами в <head>.
 //
@@ -15,6 +13,7 @@
 //   client, format   строки «Клиент» и «Формат» на странице работы (пусто: строки нет)
 //   task, did, result   «Задача», «Что делали», «Итог» (пусто: пункта нет)
 //   role             строка «Роль», пока пусто: на странице не выводится
+//   ask              призыв под работой: 'studio', 'event' или 'vertical', тексты в work.js (нет: общий)
 //   {{текст}}        факт ещё не подтвердил Глеб: посетитель видит обычный текст,
 //                    а по адресу с ?review=1 он подчёркнут. Подтвердил: убрать скобки.
 //
@@ -50,7 +49,7 @@ export const YDISK = 'https://disk.yandex.ru/d/Qmf7NYQ4vxci_g';
  * @typedef {{ id?: string, ydisk?: string, label: string, duration: string, ratio: '16/9' | '9/16',
  *             levels?: number[], poster?: string }} Film
  * @typedef {{ slug: string, title: string, kind: string, client: string, format: string,
- *             role: string, task: string, did: string, result: string, stills: string[],
+ *             role: string, task: string, did: string, result: string, ask?: 'studio' | 'event' | 'vertical', stills: string[],
  *             films: Film[], embed: string, embedLabel: string, embedDuration: string,
  *             hidden?: boolean }} Work
  */
@@ -63,18 +62,16 @@ export const WORKS = Object.freeze([
   {
     slug: 'crace',
     title: 'Уралхим CRACE',
-    kind: 'Соревнования',
+    kind: 'Съёмка соревнований',
     client: 'Уралхим',
     format: '{{Съёмка соревнований}}',
     role: '',
-    task: '{{Уралхиму нужны были ролики с соревнований для соцсетей.}}',
-    did: '{{4K, цвет по LUT, монтаж под бит.}}',
-    result: '{{6 вертикальных роликов для соцсетей.}}',
+    task: '{{Сделать ролики с соревнований для соцсетей.}}',
+    did: '{{Снимали в 4K, монтировали под бит, цвет делали по LUT.}}',
+    result: '{{6 вертикальных роликов.}}',
+    ask: 'event',
     stills: ['still-1', 'still-2', 'still-3'],
-    // Фильма нет: на странице петля и кадры. Готовый рилс REEL03 (0:44, 9:16, из Загрузок, 12.09)
-    // лежит вне сайта в portfolio-src/video-out-v2/crace/. Если Глеб подтвердит: скопировать film/
-    // и reel-poster.jpg в media/crace/ и вписать сюда
-    // { id: 'film', label: 'Ролик с соревнований', duration: '0:44', ratio: '9/16', levels: [1080, 720], poster: 'reel-poster' }
+    // Фильма пока нет: на странице петля и кадры.
     films: [],
     embed: '',
     embedLabel: '',
@@ -83,17 +80,19 @@ export const WORKS = Object.freeze([
   {
     slug: 'miu-miu-new-balance',
     title: 'MIU MIU × New Balance 530', //  : «New Balance» never splits across lines
-    kind: 'Обзор для nolimit',
+    kind: 'Обзор для YouTube',
     client: 'nolimit, YouTube-канал',
-    format: 'Обзор, студия',
+    format: 'Обзор в студии',
     role: '',
-    task: '{{Каналу nolimit нужен был обзор коллаборации в студии.}}',
-    did: '{{Ведущий в студии, лампы в кадре, распаковка сверху, детали в макро.}}',
+    task: '{{Снять обзор коллаборации.}}',
+    did: '{{Снимали ведущего в студии, распаковку сверху и детали в макро. Лампы оставили в кадре.}}',
     result: '{{Выпуск на 14 минут.}}',
+    ask: 'studio',
     stills: ['still-1', 'still-2', 'still-3'],
+    // Свой фрагмент первым: он стартует сразу, а полный выпуск идёт с Диска дольше и зависит от Диска.
     films: [
-      { ydisk: '/MIU MIU x NEW BALANCE 530.mp4', label: 'Полный выпуск', duration: '14 мин', ratio: '16/9' },
       { id: 'film', label: 'Фрагмент выпуска', duration: '1:20', ratio: '16/9', levels: [1080, 720] },
+      { ydisk: '/MIU MIU x NEW BALANCE 530.mp4', label: 'Полный выпуск', duration: '14 мин', ratio: '16/9' },
     ],
     embed: '',
     embedLabel: 'Полный выпуск',
@@ -106,13 +105,12 @@ export const WORKS = Object.freeze([
     client: 'App Lite, белёвская пастила',
     format: 'Вертикальные ролики',
     role: '',
-    task: '{{Пастиле App Lite нужны были вертикальные ролики.}}',
-    did: '{{В студии: фактура крупным планом, яблоки, ягоды, упаковка.}}',
+    task: '{{Сделать ролики о пастиле.}}',
+    did: '{{Снимали в студии фактуру крупным планом, яблоки, ягоды и упаковку.}}',
     result: '{{13 вертикальных роликов.}}',
+    ask: 'vertical',
     stills: ['still-1', 'still-2', 'still-3'],
-    // Все 13 роликов из папки «Белевская пастила» на Диске. classic, meringue_berry и cinnamon там
-    // байт в байт совпадают с film-1, film-2 и film-3, 2.mp4 с portfolio-src/src/p_2.mp4.
-    // 4.mp4 и berry.mp4 Диск не отдавал, взяты из локальных копий Глеба (md5 те же, что на Диске).
+    // Все 13 роликов из папки «Белевская пастила» на Диске.
     films: [
       { id: 'film-1', label: 'Classic', duration: '0:25', ratio: '9/16', levels: [1080, 720], poster: 'v-1' },
       { id: 'film-2', label: 'Meringue Berry', duration: '0:34', ratio: '9/16', levels: [1080, 720], poster: 'v-2' },
@@ -137,14 +135,15 @@ export const WORKS = Object.freeze([
     title: 'Росатом × ТВЭЛ',
     kind: 'Ролик с фестиваля',
     client: 'Росатом, ТВЭЛ',
-    format: 'Ролик с мероприятия',
+    format: 'Ролик с фестиваля',
     role: '',
     task: '{{Показать, как прошёл фестиваль ТВЭЛ.}}',
-    did: '{{Аниматоры, игры, шоу на сцене и танцы.}}',
+    did: '{{Снимали аниматоров, игры, шоу на сцене и танцы.}}',
     result: '{{Ролик на 2 минуты.}}',
+    ask: 'event',
     stills: ['still-1', 'still-2', 'still-3'],
     films: [
-      { id: 'film', label: 'Полная версия', duration: '2:13', ratio: '16/9', levels: [1080, 720] },
+      { id: 'film', label: 'Ролик', duration: '2:13', ratio: '16/9', levels: [1080, 720] },
     ],
     embed: '',
     embedLabel: '',
@@ -153,19 +152,21 @@ export const WORKS = Object.freeze([
   {
     slug: 'persona-grata',
     title: '«Персона Грата»',
-    kind: 'Интервью',
+    kind: 'Интервью, три ракурса',
     client: '«Персона Грата»',
     format: 'Интервью, три ракурса',
     role: '',
-    task: '{{Интервью, в котором видно и ведущего, и гостью.}}',
-    did: '{{Три ракурса: общий план на двоих и крупные планы, дневной свет студии.}}',
-    result: '{{Три выпуска: 56, 72 и 66 минут.}}',
+    task: '{{Снять интервью, в котором видно и ведущего, и гостью.}}',
+    did: '{{Снимали общий план на двоих и крупные планы при дневном свете студии.}}',
+    result: '{{3 выпуска: 56, 72 и 66 минут.}}',
+    ask: 'studio',
     stills: ['still-1', 'still-2', 'still-3'],
+    // Свой фрагмент первым, полные выпуски с Диска следом.
     films: [
+      { id: 'film', label: 'Фрагмент выпуска', duration: '1:31', ratio: '16/9', levels: [720] },
       { ydisk: PG + '1.mp4', label: 'Выпуск 1', duration: '56 мин', ratio: '16/9', poster: 'ep-1' },
       { ydisk: PG + '2.mp4', label: 'Выпуск 2', duration: '72 мин', ratio: '16/9', poster: 'ep-2' },
       { ydisk: PG + '3.mp4', label: 'Выпуск 3', duration: '66 мин', ratio: '16/9', poster: 'ep-3' },
-      { id: 'film', label: 'Фрагмент выпуска', duration: '1:31', ratio: '16/9', levels: [720] },
     ],
     embed: '',
     embedLabel: 'Полный выпуск',
@@ -179,11 +180,12 @@ export const WORKS = Object.freeze([
     format: 'Ролик с мероприятия',
     role: '',
     task: '{{Показать, как прошла «Медиастанция».}}',
-    did: '{{Регистрация, сессии, награждение и общее фото.}}',
+    did: '{{Снимали регистрацию, сессии, награждение и общее фото.}}',
     result: '{{Ролик на 2 минуты.}}',
+    ask: 'event',
     stills: ['still-1', 'still-2', 'still-3'],
     films: [
-      { id: 'film', label: 'Полная версия', duration: '2:08', ratio: '16/9', levels: [1080, 720] },
+      { id: 'film', label: 'Ролик', duration: '2:08', ratio: '16/9', levels: [1080, 720] },
     ],
     embed: '',
     embedLabel: '',
@@ -192,13 +194,14 @@ export const WORKS = Object.freeze([
   {
     slug: 'mst',
     title: 'ГК МСТ',
-    kind: 'Стенд на выставке',
+    kind: 'Ролики с выставки',
     client: 'ГК МСТ',
     format: '{{Вертикальные ролики}}',
     role: '',
-    task: '{{Ролик со стенда на выставке эстетической медицины.}}',
-    did: '{{Оборудование в работе и комментарии специалистов.}}',
-    result: '{{Два вертикальных ролика.}}',
+    task: '{{Сделать ролики со стенда на выставке эстетической медицины.}}',
+    did: '{{Снимали оборудование в работе и комментарии специалистов.}}',
+    result: '{{2 вертикальных ролика.}}',
+    ask: 'event',
     stills: ['still-1'],
     films: [
       { id: 'film', label: 'Полная версия', duration: '1:41', ratio: '9/16', levels: [720], poster: 'poster-v' },
@@ -216,7 +219,8 @@ export const WORKS = Object.freeze([
     format: '{{Вертикальный ролик}}',
     role: '',
     task: '',
-    did: '{{Процедура на модели, чёрный фон, крупные планы.}}',
+    did: '{{Снимали процедуру на модели: чёрный фон, крупные планы.}}',
+    ask: 'vertical',
     result: '',
     stills: [],
     films: [
@@ -228,7 +232,7 @@ export const WORKS = Object.freeze([
   },
   {
     slug: 'vera-borisovna',
-    // Скрыта 24.10: Глеб просил «только самые лучшие работы»; слабее остальных, нет «Видео 2».
+    // Скрыта: в сетке и листании её нет, файлы не публикуются.
     hidden: true,
     title: 'Вера Борисовна',
     kind: 'Монолог на камеру',

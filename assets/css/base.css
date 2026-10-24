@@ -171,6 +171,12 @@ button {
   outline-offset: 3px;
 }
 
+/* The target of a skip link is focused by the script, not operated: no frame around the whole page body. */
+main[tabindex="-1"]:focus,
+.works[tabindex="-1"]:focus {
+  outline: none;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -256,18 +262,21 @@ button {
   transition: background-color 0.2s ease;
 }
 
-.btn:hover {
-  background: var(--btn-hover);
-}
-
 .btn--ghost {
   background: transparent;
   color: var(--fg);
   box-shadow: inset 0 0 0 1.5px currentColor;
 }
 
-.btn--ghost:hover {
-  background: color-mix(in srgb, currentColor 10%, transparent);
+/* Hover only where there is a pointer: on touch screens it would stick after the tap. */
+@media (hover: hover) {
+  .btn:hover {
+    background: var(--btn-hover);
+  }
+
+  .btn--ghost:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
 }
 
 @media (min-width: 700px) {
@@ -275,6 +284,13 @@ button {
     min-height: 56px;
     padding: 0 30px;
     font-size: 17px;
+  }
+}
+
+/* Windows high contrast removes backgrounds: a button made of colour alone gets a border, or it reads as plain text. */
+@media (forced-colors: active) {
+  .btn {
+    border: 2px solid ButtonText;
   }
 }
 
@@ -408,19 +424,38 @@ button {
   }
 }
 
-/* Small phones: the brand and both links still share one row from 375 px up. */
+/* Small phones: the brand and both links share one row down to 360 px. */
 @media (max-width: 389px) {
   .top {
-    column-gap: 10px;
+    column-gap: 8px;
+  }
+
+  .top__brand {
+    gap: 8px;
+  }
+
+  .logo {
+    height: 26px;
+  }
+
+  .top__section {
+    padding-left: 8px;
   }
 
   .top__nav {
-    gap: 12px;
+    gap: 10px;
   }
 
   .top__nav a,
   .top__section {
     font-size: 14.5px;
+  }
+}
+
+/* Below 360 px the section label gives way; the two links stay. */
+@media (max-width: 359px) {
+  .top__section {
+    display: none;
   }
 }
 
@@ -528,9 +563,12 @@ button {
   shape-rendering: crispEdges;
 }
 
+/* The contacts read first: larger than the policy link under them. */
 .footer__line {
+  font-size: 14px;
+  line-height: 1.5;
   text-transform: none;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .footer__line a,
@@ -541,9 +579,36 @@ button {
   white-space: nowrap;
 }
 
+/* A thumb needs 44 px: the footer links and the logo are 28-40 px high now. */
+@media (pointer: coarse) {
+  .footer__line a,
+  .footer__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 2px;
+  }
+
+  .footer__brand {
+    padding: 2px 0;
+  }
+}
+
 .footer__links {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--fg-dim);
+}
+
+/* Phones: names on one line, Telegram and phone on the next, no dot hanging at a line end. */
+@media (max-width: 559px) {
+  .footer__line {
+    display: grid;
+    justify-items: center;
+  }
+
+  .footer__sep {
+    display: none;
+  }
 }
 
 .footer .theme-toggle {
@@ -592,5 +657,38 @@ button {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- pressing: the tap highlight is off (body), so each control answers the finger itself ---------- */
+.card__link:active .card__media,
+.pager__link:active .pager__thumb,
+.reels__item:active .reels__thumb {
+  filter: brightness(0.86);
+}
+
+.card__link:active .card__cap,
+.pager__link:active .pager__text,
+.top__nav a:active,
+.work-nav a:active,
+.footer a:active,
+.contact__direct a:active,
+.lead-form__link:active {
+  opacity: 0.6;
+}
+
+.btn:active {
+  background: var(--btn-hover);
+}
+
+.btn--ghost:active {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn:active,
+  .seg__item:active,
+  .player__start:active .player__start-icon {
+    transform: scale(0.96);
   }
 }

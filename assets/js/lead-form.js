@@ -4,9 +4,10 @@
 // Telegram and phone in place of the submit button: the form never pretends to send.
 // The pure helpers are exported for the Node tests in backend/test.
 //
-// Portfolio copy: the same file as js/lead-form.js on wearesalut.com (23.10.2026) with one change.
+// Portfolio copy: the same file as js/lead-form.js on wearesalut.com (23.10.2026) with these changes.
 // The portfolio has pages in works/, so the policy link is resolved from this file's own address
-// (from assets/js/ up to the site root) instead of the page's.
+// (from assets/js/ up to the site root) instead of the page's. The message placeholder and the
+// rate-limit line are the portfolio's own (24.10), and a work page can preset the format (data-kind).
 
 import { ENDPOINT, BOT_USERNAME } from './lead-config.js';
 
@@ -75,10 +76,11 @@ export const TEXT = Object.freeze({
   kindPlaceholder: 'Выберите формат',
   message: 'Пара слов о задаче',
   optional: 'необязательно',
-  messagePlaceholder: 'Что снимаем, для чего и к какой дате',
+  messagePlaceholder: 'Например: интервью в студии для YouTube-канала, к концу месяца',
   counter: 'Осталось знаков:',
   consent: 'Соглашаюсь на обработку персональных данных',
   policy: 'Политика обработки персональных данных',
+  newTab: ' (откроется в новой вкладке)',
   honeypot: 'Это поле заполнять не нужно',
   submit: 'Отправить заявку',
   sending: 'Отправляем…',
@@ -103,7 +105,7 @@ export const TEXT = Object.freeze({
     consent: 'Отметьте согласие на обработку персональных данных.',
   }),
   status: Object.freeze({
-    rate: 'Слишком много заявок за час. Напишите Глебу напрямую:',
+    rate: 'Форма временно не принимает заявки. Напишите Глебу напрямую:',
     server: 'Заявка не сохранилась из-за ошибки на сервере. Напишите Глебу напрямую:',
     network: 'Заявка не ушла: нет связи с сервером. Проверьте интернет и отправьте ещё раз или напишите Глебу напрямую:',
     timeout: 'Сервер не ответил вовремя, и мы не знаем, дошла ли заявка. Чтобы она не потерялась, напишите Глебу напрямую:',
@@ -309,13 +311,14 @@ function contactGroup() {
   ]);
 }
 
-function kindField() {
+/** @param {string} preset a FORMATS value chosen in advance (a work page about studio shooting), or '' */
+function kindField(preset) {
   return el('div', { class: 'lead-form__field' }, [
     el('label', { class: 'lead-form__label', for: fieldId('kind'), text: TEXT.kind }),
     el('div', { class: 'lead-form__select' }, [
-      el('select', { class: 'lead-form__input', id: fieldId('kind'), name: 'kind', required: true, 'aria-describedby': errorId('kind') }, [
-        el('option', { value: '', disabled: true, selected: true, text: TEXT.kindPlaceholder }),
-        ...FORMATS.map((format) => el('option', { value: format.value, text: format.label })),
+      el('select', { class: 'lead-form__input', id: fieldId('kind'), name: 'kind', 'aria-required': 'true', 'aria-describedby': errorId('kind') }, [
+        el('option', { value: '', disabled: true, selected: !preset, text: TEXT.kindPlaceholder }),
+        ...FORMATS.map((format) => el('option', { value: format.value, selected: format.value === preset, text: format.label })),
       ]),
       chevron(),
     ]),
@@ -352,7 +355,7 @@ function consentField() {
         name: 'consent',
         type: 'checkbox',
         value: '1',
-        required: true,
+        'aria-required': 'true',
         'aria-describedby': fieldId('policy') + ' ' + errorId('consent'),
       }),
       el('label', { for: fieldId('consent'), text: TEXT.consent }),
@@ -360,7 +363,10 @@ function consentField() {
     // The link sits outside the label, so a tap on it opens the policy instead of ticking the box.
     // It opens in a new tab: what the visitor typed stays in the form.
     el('p', { class: 'lead-form__policy', id: fieldId('policy') },
-      el('a', { class: 'lead-form__link', href: POLICY_URL, target: '_blank', rel: 'noopener', text: TEXT.policy })),
+      el('a', { class: 'lead-form__link', href: POLICY_URL, target: '_blank', rel: 'noopener' }, [
+        typo(TEXT.policy),
+        el('span', { class: 'visually-hidden', text: TEXT.newTab }),
+      ])),
     errorSlot('consent'),
   ]);
 }
@@ -400,9 +406,9 @@ function offlineFoot() {
   ]);
 }
 
-function buildForm(online) {
+function buildForm(online, preset) {
   return el('form', { class: 'lead-form__form', novalidate: true, 'data-state': online ? 'ready' : 'offline' }, [
-    el('div', { class: 'lead-form__fields' }, [nameField(), contactGroup(), kindField(), messageField(), consentField(), honeypot()]),
+    el('div', { class: 'lead-form__fields' }, [nameField(), contactGroup(), kindField(preset), messageField(), consentField(), honeypot()]),
     online ? onlineFoot() : offlineFoot(),
   ]);
 }
@@ -414,7 +420,7 @@ function nameField() {
     autocomplete: 'name',
     autocapitalize: 'words',
     enterkeyhint: 'next',
-    required: true,
+    'aria-required': 'true',
     'aria-describedby': errorId('name'),
   });
 }
@@ -555,6 +561,8 @@ async function submit(form, slot, elapsed) {
   setBusy(form, true);
   const result = await send(values, elapsed);
   if (result.type === 'success') {
+    form.dataset.sent = 'true';
+    clearDraft();
     showSuccess(slot, result, values);
     return;
   }
@@ -576,6 +584,50 @@ function updateCounter(form) {
   counter.textContent = show ? TEXT.counter + ' ' + left : '';
 }
 
+// ---------- Draft: what is typed stays in this tab until it is sent or the tab is closed ----------
+
+const DRAFT_KEY = 'salut-lead-draft';
+const DRAFT_FIELDS = Object.freeze(['name', 'telegram', 'phone', 'kind', 'message']); // the consent tick is never kept
+
+function readDraft() {
+  try {
+    const draft = JSON.parse(window.sessionStorage.getItem(DRAFT_KEY) || 'null');
+    return draft && typeof draft === 'object' ? draft : null;
+  } catch (error) {
+    return null; // storage blocked or the entry is damaged: an empty form
+  }
+}
+
+function saveDraft(form) {
+  if (form.dataset.sent === 'true') return; // the lead is gone: a late change event of the removed fields must not bring the draft back
+  const draft = Object.fromEntries(DRAFT_FIELDS.map((name) => [name, control(form, name).value]));
+  try {
+    if (Object.values(draft).every((value) => value === '')) window.sessionStorage.removeItem(DRAFT_KEY);
+    else window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch (error) {
+    // storage blocked: the draft lives as long as this page
+  }
+}
+
+function clearDraft() {
+  try {
+    window.sessionStorage.removeItem(DRAFT_KEY);
+  } catch (error) {
+    // nothing to clear
+  }
+}
+
+/** Puts the saved draft back; a field the browser has already restored itself is left alone. */
+function restoreDraft(form) {
+  const draft = readDraft();
+  if (!draft) return;
+  DRAFT_FIELDS.forEach((name) => {
+    const input = control(form, name);
+    if (input.value === '' && typeof draft[name] === 'string') input.value = draft[name];
+  });
+  updateCounter(form);
+}
+
 /** Time since the form came into view: the backend reads anything under 3 seconds as a bot. */
 function startTimer(form) {
   let shownAt = performance.now();
@@ -592,7 +644,9 @@ function startTimer(form) {
 
 function mountLeadForm(slot) {
   const online = String(ENDPOINT || '').trim() !== '';
-  const form = buildForm(online);
+  // A work page may name its format in data-kind (work.js sets it before this module runs).
+  const preset = FORMATS.some((format) => format.value === slot.dataset.kind) ? slot.dataset.kind : '';
+  const form = buildForm(online, preset);
   slot.classList.add('lead-form');
   slot.replaceChildren(form);
   if (!online) {
@@ -601,6 +655,7 @@ function mountLeadForm(slot) {
     });
     return;
   }
+  restoreDraft(form);
   const elapsed = startTimer(form);
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -608,6 +663,7 @@ function mountLeadForm(slot) {
   });
   const recheck = (event) => {
     if (event.target === control(form, 'message')) updateCounter(form);
+    saveDraft(form);
     if (form.dataset.attempted === 'true') paintErrors(form, findErrors(readValues(form)));
   };
   form.addEventListener('input', recheck);

@@ -18,18 +18,27 @@ const NARROW_POSTER_PX = 800; // narrower windows get the 960 px poster
 const EMBED_HOSTS = Object.freeze(['rutube.ru', 'vk.com', 'vkvideo.ru']);
 const EMBED_ALLOW = 'fullscreen; picture-in-picture; encrypted-media';
 const STRIP_FROM = 6; // this many vertical films and more get a strip of covers instead of text tabs
+const BUFFER_AHEAD_S = 30; // hls.js keeps this much ahead instead of the whole film
+const DISK_START_MS = 30000; // a Disk film without its first frame this long after the press: the message
+const DISK_STALL_MS = 15000; // a started Disk film gets no bytes this long: a fresh link
+const DISK_RETRIES = 2; // fresh Disk links per film before the message
+const TELEGRAM_URL = 'https://t.me/imglebsmirnov';
 
 const TEXT = Object.freeze({
   start: 'Смотреть',
-  error: 'Видео не загрузилось. Обновите страницу или напишите Глебу в Telegram @imglebsmirnov.',
-  diskError: 'Не получилось загрузить видео с Яндекс Диска.',
+  error: 'Видео не загрузилось. Обновите страницу или напишите Глебу:',
+  telegram: 'Telegram @imglebsmirnov',
+  diskError: 'Видео с Яндекс Диска не загрузилось.',
   openDisk: 'Открыть на Яндекс Диске',
   quality: 'Качество',
   qualityGroup: 'Качество видео',
   auto: 'Авто',
-  tabs: 'Версии видео',
+  tabs: 'Выбор видео',
   stage: 'Видео',
   separator: ' · ',
+  pauseLoop: 'Поставить видео на паузу',
+  playLoop: 'Продолжить видео',
+  loopAlt: ', кадр из ролика',
 });
 
 let libPromise = null;
@@ -115,6 +124,11 @@ function shortSide(level) {
 
 // ---------- HLS ----------
 
+/** «Авто» starts on the lightest rung: its first segment is shown as it arrives, ABR climbs from there. */
+function startIndex(index) {
+  return index === -1 ? 0 : index;
+}
+
 function watchErrors(Hls, hls, master, onFail) {
   const manifestErrors = [Hls.ErrorDetails.MANIFEST_LOAD_ERROR, Hls.ErrorDetails.MANIFEST_LOAD_TIMEOUT, Hls.ErrorDetails.MANIFEST_PARSING_ERROR];
   let recoveries = 0;
@@ -167,7 +181,7 @@ function createStream(video, base, opts) {
       const index = levelIndex();
       if (index === undefined) return;
       if (!state.started) {
-        state.hls.startLevel = index;
+        state.hls.startLevel = startIndex(index);
         return;
       }
       if (state.hls.manualLevel === index) return;
@@ -208,7 +222,7 @@ function createStream(video, base, opts) {
         applyQuality();
         return;
       }
-      const hls = new Hls({ autoStartLoad: false, capLevelToPlayerSize: true });
+      const hls = new Hls({ autoStartLoad: false, capLevelToPlayerSize: true, maxMaxBufferLength: BUFFER_AHEAD_S });
       state.hls = hls;
       watchErrors(Hls, hls, master, fail);
       hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
@@ -226,7 +240,7 @@ function createStream(video, base, opts) {
   /** hls.js after the start: load from the chosen level and keep it if it was picked by hand. */
   function begin() {
     const index = levelIndex();
-    if (index !== undefined) state.hls.startLevel = index;
+    if (index !== undefined) state.hls.startLevel = startIndex(index);
     state.hls.startLoad();
     if (index !== undefined && index !== -1) state.hls.loadLevel = index;
     tryPlay(video);
@@ -256,6 +270,12 @@ function createStream(video, base, opts) {
       state.quality = quality;
       if (state.ready) applyQuality();
     },
+    suspend() {
+      if (state.hls) state.hls.stopLoad();
+    },
+    resume() {
+      if (state.hls && state.started) state.hls.startLoad();
+    },
     destroy() {
       state.destroyed = true;
       video.pause();
@@ -278,7 +298,11 @@ function filmView(work, film, ctx) {
     poster: filmPoster(work, film),
     'aria-label': plain(work.title) + TEXT.separator + film.label,
   });
-  const error = h('p', { class: 'player__error', role: 'alert', hidden: true }, typo(TEXT.error));
+  // Laid out like the Disk message below: the text, then a link the visitor can press.
+  const error = h('p', { class: 'player__error', role: 'alert', hidden: true }, [
+    h('span', null, typo(TEXT.error)),
+    h('a', { class: 'player__error-link', href: TELEGRAM_URL, rel: 'noopener' }, TEXT.telegram),
+  ]);
   const button = startButton({ type: 'hls', film });
 
   const stream = createStream(video, mediaPath(work.slug, film.id + '/', ''), {
@@ -288,13 +312,15 @@ function filmView(work, film, ctx) {
       button.hidden = true;
     },
   });
-  button.addEventListener('click', () => {
+  const start = (keepFocus) => {
+    ctx.engage();
     button.hidden = true;
     video.controls = true;
     stream.start();
-    video.focus({ preventScroll: true });
-  });
-  return { nodes: [video, button, error], stream, destroy: () => stream.destroy() };
+    if (keepFocus !== true) video.focus({ preventScroll: true }); // a switch leaves the focus on the tab or cover
+  };
+  button.addEventListener('click', start);
+  return { nodes: [video, button, error], stream, start, destroy: () => stream.destroy() };
 }
 
 function startButton(source) {
@@ -306,7 +332,7 @@ function startButton(source) {
  * A film from the Yandex Disk folder: the link is asked for ahead, after first paint, so that a click
  * can start the film inside the gesture (Safari); an expired link is asked for once more.
  */
-function diskView(work, film) {
+function diskView(work, film, ctx) {
   const video = h('video', {
     class: 'player__video',
     playsinline: true,
@@ -321,12 +347,19 @@ function diskView(work, film) {
   ]);
   const button = startButton({ type: 'disk', film });
   const file = diskFile(film.ydisk);
-  const state = { started: false, retried: false, destroyed: false };
+  const state = { started: false, retries: 0, destroyed: false, timer: 0 };
 
+  const disarm = () => {
+    window.clearTimeout(state.timer);
+    state.timer = 0;
+  };
   const fail = (reason) => {
     if (state.destroyed) return;
+    disarm();
     console.warn('[portfolio] Disk film failed:', reason && reason.message ? reason.message : reason);
     video.pause();
+    video.removeAttribute('src'); // stop the browser asking a broken Disk again and again
+    video.load();
     video.controls = false;
     button.hidden = true;
     error.hidden = false;
@@ -334,12 +367,45 @@ function diskView(work, film) {
   const play = (href) => {
     if (state.destroyed) return;
     video.src = href;
-    tryPlay(video);
+    const attempt = video.play();
+    // Safari refuses play() outside the press (the link came later): give the visitor the button back.
+    if (attempt && attempt.catch) {
+      attempt.catch((reason) => {
+        if (state.destroyed || !reason || reason.name !== 'NotAllowedError') return; // other failures go through 'error'
+        disarm();
+        button.hidden = false;
+        video.controls = false;
+      });
+    }
+  };
+  const recover = (reason) => {
+    if (!state.started || state.destroyed) return;
+    if (state.retries >= DISK_RETRIES) {
+      fail(reason);
+      return;
+    }
+    state.retries += 1;
+    const time = video.currentTime;
+    file.get(true).then((href) => {
+      video.addEventListener('loadedmetadata', () => {
+        if (time > 0) video.currentTime = time;
+      }, { once: true });
+      play(href);
+      arm(); // a new link starts from nothing: the start deadline again
+    }, fail);
+  };
+  // Before the first frame the browser reports no bytes (a long episode first loads 3 to 4 MB of index):
+  // one generous deadline. After it, a stall without new bytes means the Disk is stuck, not slow.
+  const arm = () => {
+    disarm();
+    if (video.readyState === 0) state.timer = window.setTimeout(() => fail(new Error('Disk film did not start')), DISK_START_MS);
+    else state.timer = window.setTimeout(() => recover(new Error('Disk film stalled')), DISK_STALL_MS);
   };
   whenIdle(() => {
     if (!state.destroyed) file.get().catch(() => {}); // a failure shows up only if the visitor presses play
   });
-  button.addEventListener('click', () => {
+  const start = (keepFocus) => {
+    ctx.engage();
     state.started = true;
     button.hidden = true;
     video.controls = true;
@@ -347,30 +413,24 @@ function diskView(work, film) {
     const href = file.fresh();
     if (href) play(href);
     else file.get().then(play, fail);
-    video.focus({ preventScroll: true });
-  });
-  video.addEventListener('error', () => {
-    if (!state.started || state.destroyed) return;
-    if (state.retried) {
-      fail(new Error('video error ' + (video.error ? video.error.code : '')));
-      return;
-    }
-    state.retried = true;
-    const time = video.currentTime;
-    file.get(true).then((href) => {
-      video.addEventListener('loadedmetadata', () => {
-        if (time > 0) video.currentTime = time;
-      }, { once: true });
-      play(href);
-    }, fail);
-  });
+    arm();
+    if (keepFocus !== true) video.focus({ preventScroll: true });
+  };
+  button.addEventListener('click', start);
+  video.addEventListener('waiting', () => { if (state.started && video.readyState > 0) arm(); });
+  video.addEventListener('progress', () => { if (state.timer && video.readyState > 0) arm(); }); // bytes come: slow, not stuck
+  video.addEventListener('loadedmetadata', disarm);
+  video.addEventListener('playing', disarm);
+  video.addEventListener('pause', disarm);
+  video.addEventListener('error', () => recover(new Error('video error ' + (video.error ? video.error.code : ''))));
   const destroy = () => {
     state.destroyed = true;
+    disarm();
     video.pause();
     video.removeAttribute('src');
     video.load();
   };
-  return { nodes: [video, button, error], stream: null, destroy };
+  return { nodes: [video, button, error], stream: null, start, destroy };
 }
 
 function embedView(work, source) {
@@ -425,7 +485,8 @@ function coverStrip(work, sources, onPick) {
 function centreCover(strip, index) {
   const button = strip.querySelector('button[data-value="' + index + '"]');
   if (!button || strip.scrollWidth <= strip.clientWidth) return;
-  strip.scrollTo({ left: button.offsetLeft - (strip.clientWidth - button.offsetWidth) / 2, behavior: 'smooth' });
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  strip.scrollTo({ left: button.offsetLeft - (strip.clientWidth - button.offsetWidth) / 2, behavior: calm ? 'auto' : 'smooth' });
 }
 
 /** The quality switch for one film: «Авто» plus each rendition, best first; none for a single one. */
@@ -453,8 +514,11 @@ export function mountStage(container, work) {
   inner.append(bar);
   container.append(inner);
 
-  const state = { index: -1, view: null, quality: 'auto', qualityGroup: null, tabs: null, strip: null, caption: null };
-  const ctx = { quality: () => state.quality };
+  const state = { index: -1, view: null, quality: 'auto', qualityGroup: null, tabs: null, strip: null, caption: null, engaged: false };
+  const ctx = { quality: () => state.quality, engage: () => { state.engaged = true; } };
+  player.addEventListener('keydown', (event) => onFilmKey(event, player));
+  window.addEventListener('pagehide', () => { if (state.view && state.view.stream) state.view.stream.suspend(); });
+  window.addEventListener('pageshow', (event) => { if (event.persisted && state.view && state.view.stream) state.view.stream.resume(); });
   const vertical = sources.every((source) => source.type !== 'embed' && source.film.ratio === '9/16');
 
   if (sources.length >= STRIP_FROM && vertical) {
@@ -496,26 +560,55 @@ export function mountStage(container, work) {
     inner.style.setProperty('--arh', String(ratio.h));
     inner.classList.toggle('is-vertical', ratio.h > ratio.w);
     if (source.type === 'embed') state.view = embedView(work, source);
-    else if (source.type === 'disk') state.view = diskView(work, source.film);
+    else if (source.type === 'disk') state.view = diskView(work, source.film, ctx);
     else state.view = filmView(work, source.film, ctx);
     player.replaceChildren(...state.view.nodes);
     press(state.tabs || state.strip, index);
     if (state.caption) state.caption.textContent = typo(labelOf(source));
     if (state.strip && !first) centreCover(state.strip, index);
     renderQuality(source);
+    // The visitor already watches: the version they picked starts at once, inside the same press.
+    if (state.engaged && state.view.start) state.view.start(true);
   }
 
   show(0);
 }
 
-/** A work without a film: its silent loop over the poster, no play button, paused off screen. */
+/** YouTube keys on a started film, on any keyboard layout: F full screen, M sound, K pause. */
+function onFilmKey(event, player) {
+  const video = player.querySelector('.player__video');
+  if (!video || !video.controls || event.altKey || event.ctrlKey || event.metaKey) return;
+  if (event.code === 'KeyF') {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+  } else if (event.code === 'KeyM') video.muted = !video.muted;
+  else if (event.code === 'KeyK') { if (video.paused) tryPlay(video); else video.pause(); }
+  else return;
+  event.preventDefault();
+}
+
+/** One button that stops and restarts the loop: moving content that starts by itself needs a way to stop it (WCAG 2.2.2). */
+function pauseToggle(onChange) {
+  const button = h('button', { type: 'button', class: 'player__pause', 'aria-label': TEXT.pauseLoop }, icon('pause'));
+  let paused = false;
+  button.addEventListener('click', () => {
+    paused = !paused;
+    button.setAttribute('aria-label', paused ? TEXT.playLoop : TEXT.pauseLoop);
+    button.firstChild.replaceWith(icon(paused ? 'play' : 'pause'));
+    onChange(paused);
+  });
+  return button;
+}
+
+/** A work without a film: its silent loop over the poster, a pause button, paused off screen. */
 function mountLoop(container, work) {
   const player = h('div', { class: 'player player--loop', style: 'view-transition-name: work-' + work.slug });
   player.append(picture({
     src: mediaPath(work.slug, 'poster'),
     srcset: mediaPath(work.slug, 'poster-960') + ' 960w, ' + mediaPath(work.slug, 'poster') + ' 1920w',
     sizes: '100vw',
-    alt: '',
+    alt: plain(work.title) + TEXT.loopAlt,
     width: 1920,
     height: 1080,
     eager: true,
@@ -527,13 +620,22 @@ function mountLoop(container, work) {
   const video = silentLoop('player__loop');
   video.src = mediaPath(work.slug, 'loop', '.mp4');
   video.preload = 'auto';
+  const state = { paused: false, visible: false };
+  const sync = () => (state.visible && !state.paused ? tryPlay(video) : video.pause());
+  const toggle = pauseToggle((paused) => {
+    state.paused = paused;
+    sync();
+  });
   video.addEventListener('playing', () => video.classList.add('is-on'), { once: true });
-  video.addEventListener('error', () => video.remove(), { once: true });
-  player.append(video);
+  video.addEventListener('error', () => {
+    video.remove();
+    toggle.remove();
+  }, { once: true });
+  player.append(video, toggle);
   new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting) tryPlay(video);
-      else video.pause();
+      state.visible = entry.isIntersecting;
     });
+    sync();
   }, { threshold: 0.25 }).observe(player);
 }
