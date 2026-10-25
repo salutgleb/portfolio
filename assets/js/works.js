@@ -140,9 +140,11 @@ export const WORKS = Object.freeze([
     result: '{{6 вертикальных роликов.}}',
     ask: 'event',
     stills: ['still-1', 'still-2', 'still-3'],
-    // Общая работа: на странице петля и кадры. Шесть вертикальных роликов с этих соревнований стоят отдельной
-    // работой, FOCUS Team.
-    films: [],
+    // Главный рилс, который команда FOCUS выложила у себя (instagram.com/reel/DdPNZYpNP_E, это наш 05_FOCUS).
+    // Все шесть роликов с этих соревнований стоят отдельной работой, FOCUS Team.
+    films: [
+      { id: 'film', label: 'Рилс для FOCUS', duration: '0:25', ratio: '9/16', levels: [1080, 720], poster: 'reel' },
+    ],
     embed: '',
     embedLabel: '',
     embedDuration: '',
