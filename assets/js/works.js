@@ -3,6 +3,8 @@
 //
 // Порядок в списке = порядок в «Предыдущая / Следующая»: сначала работы сетки 16:9, сильные первыми,
 // потом вертикальные. В сетке и в ряду «Вертикальные ролики» работы идут в том же порядке.
+// С 25.10 сайт смотрят авторы YouTube-каналов: первыми студийные выпуски и рассказ (MIU MIU,
+// «Персона Грата», «Всё в твоих руках»), за ними CRACE и мероприятия.
 // Тот же порядок в WORKS генератора оболочек make_pages.py.
 // hidden: true убирает работу из сетки и листания.
 // Новая работа: запись здесь, папка media/<slug>/ и копия любой страницы works/*.html
@@ -65,24 +67,6 @@ const vertical = (id, label, duration) => ({ id, label, duration, ratio: '9/16',
 /** @type {ReadonlyArray<Work>} */
 export const WORKS = Object.freeze([
   {
-    slug: 'crace',
-    title: 'Уралхим CRACE',
-    kind: 'Съёмка соревнований',
-    client: 'Уралхим',
-    format: '{{Съёмка соревнований}}',
-    role: '',
-    task: '{{Сделать ролики с соревнований для соцсетей.}}',
-    did: '{{Снимали в 4K, монтировали под бит, цвет делали по LUT.}}',
-    result: '{{6 вертикальных роликов.}}',
-    ask: 'event',
-    stills: ['still-1', 'still-2', 'still-3'],
-    // Общая работа: на странице петля и кадры. Вертикальный рилс с этих соревнований стоит отдельно, FOCUS Team.
-    films: [],
-    embed: '',
-    embedLabel: '',
-    embedDuration: '',
-  },
-  {
     slug: 'miu-miu-new-balance',
     title: 'MIU MIU × New Balance 530', //  : «New Balance» never splits across lines
     kind: 'Обзор для YouTube',
@@ -102,24 +86,6 @@ export const WORKS = Object.freeze([
     embed: '',
     embedLabel: 'Полный выпуск',
     embedDuration: '14 мин',
-  },
-  {
-    slug: 'vse-v-tvoih-rukah',
-    title: '«Всё в твоих руках»',
-    kind: 'Короткий фильм',
-    client: '',
-    format: '{{Короткий игровой фильм}}',
-    role: '',
-    task: '{{Финальная работа на курсе Николая Чернобаева.}}',
-    did: '{{Сценарий, съёмка и монтаж. Герой застрял дома с телефоном и встречает самого себя. Обоих играет Глеб.}}',
-    result: 'Фильм на 2:45.',
-    stills: ['still-1', 'still-2', 'still-3'],
-    films: [
-      { id: 'film', label: 'Фильм', duration: '2:45', ratio: '16/9', levels: [1080, 720] },
-    ],
-    embed: '',
-    embedLabel: '',
-    embedDuration: '',
   },
   {
     slug: 'persona-grata',
@@ -143,6 +109,42 @@ export const WORKS = Object.freeze([
     embed: '',
     embedLabel: 'Полный выпуск',
     embedDuration: '56 мин',
+  },
+  {
+    slug: 'vse-v-tvoih-rukah',
+    title: '«Всё в твоих руках»',
+    kind: 'Короткий фильм',
+    client: '',
+    format: '{{Короткий игровой фильм}}',
+    role: '',
+    task: '{{Финальная работа на курсе Николая Чернобаева.}}',
+    did: '{{Сценарий, съёмка и монтаж. Герой застрял дома с телефоном и встречает самого себя. Обоих играет Глеб.}}',
+    result: 'Фильм на 2:45.',
+    stills: ['still-1', 'still-2', 'still-3'],
+    films: [
+      { id: 'film', label: 'Фильм', duration: '2:45', ratio: '16/9', levels: [1080, 720] },
+    ],
+    embed: '',
+    embedLabel: '',
+    embedDuration: '',
+  },
+  {
+    slug: 'crace',
+    title: 'Уралхим CRACE',
+    kind: 'Съёмка соревнований',
+    client: 'Уралхим',
+    format: '{{Съёмка соревнований}}',
+    role: '',
+    task: '{{Сделать ролики с соревнований для соцсетей.}}',
+    did: '{{Снимали в 4K, монтировали под бит, цвет делали по LUT.}}',
+    result: '{{6 вертикальных роликов.}}',
+    ask: 'event',
+    stills: ['still-1', 'still-2', 'still-3'],
+    // Общая работа: на странице петля и кадры. Вертикальный рилс с этих соревнований стоит отдельно, FOCUS Team.
+    films: [],
+    embed: '',
+    embedLabel: '',
+    embedDuration: '',
   },
   {
     slug: 'basketball',

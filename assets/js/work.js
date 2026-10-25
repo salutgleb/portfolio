@@ -30,7 +30,8 @@ const TEXT = Object.freeze({
 // the format chosen in the form (lead-form.js reads data-kind of #lead-form when it mounts).
 const ASK = Object.freeze({
   studio: Object.freeze({
-    lead: 'Нужен такой же выпуск или интервью для вашего канала? Напишите тему, кто в кадре и к какой дате. Студию подберём сами, ответит Глеб.',
+    // «Снимем у вас или в арендованной студии» is the studio package of wearesalut.com, word for word.
+    lead: 'Нужен такой же выпуск или интервью для вашего канала? Напишите тему, кто в кадре и к какой дате. Снимем у вас или в арендованной студии. Ответит Глеб.',
     kind: 'studio',
   }),
   event: Object.freeze({
