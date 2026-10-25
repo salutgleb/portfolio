@@ -1,8 +1,9 @@
-// The portfolio home: the grid of works from works.js and their silent loops.
-// A loop plays while the pointer is over its card (or the card has keyboard focus); on touch screens
-// the card nearest the middle of the screen plays. Visitors with reduced motion or Save-Data keep stills.
+// The portfolio home: the 16:9 wall of works and, under it, the row of vertical films, both from works.js,
+// with their silent loops. A loop plays while the pointer is over its card (or the card has keyboard focus);
+// on touch screens the card nearest the middle of the screen plays. Visitors with reduced motion or Save-Data
+// keep stills.
 
-import { SHOWN } from './works.js';
+import { WALL, VERTICAL_TILES } from './works.js';
 import { h, typo, plain, picture, calmMode, mediaPath, rootPath, silentLoop, tryPlay } from './dom.js';
 import { initTheme } from './theme.js';
 
@@ -15,15 +16,27 @@ const EAGER_CARDS = 3; // the first row loads at once, the rest when scrolled ne
 const CARDS_ON_FIRST_SCREEN = window.matchMedia('(min-width: 1200px)').matches ? 5
   : window.matchMedia('(min-width: 700px)').matches ? 4 : 2;
 // Desktop: after load only the loops of the first row are fetched (their first hover starts at once), the rest on
-// hover. Fetching all eight (8 MB) kept the page out of the browser's Back cache while they downloaded.
+// hover. Fetching all of them (8 MB) kept the page out of the browser's Back cache while they downloaded.
 const WARM_CARDS = 2;
 // A large first-row card on a wide screen plays the 1280 px loop; every other card the 960 px one.
 const LARGE_LOOP = '(min-width: 1200px)';
 const IN_VIEW = 0.6; // touch screens: a frame at least this much on screen may play
 const FADE_MS = 450; // keep in step with .card__loop in grid.css
 
+function workHref(work) {
+  return rootPath() + 'works/' + work.slug + '.html';
+}
+
+function caption(title, kind) {
+  return h('span', { class: 'card__cap' }, [
+    h('span', { class: 'card__title' }, typo(plain(title))),
+    ' ',
+    h('span', { class: 'card__kind' }, typo(plain(kind))),
+  ]);
+}
+
 function card(work, index) {
-  const wide = SHOWN.length % 3 === 2 && index < 2;
+  const wide = WALL.length % 3 === 2 && index < 2;
   const media = h('span', { class: 'card__media', style: 'view-transition-name: work-' + work.slug });
   // The first card's poster is also asked for in <head> (make_pages.py): srcset and sizes must stay identical there.
   media.append(picture({
@@ -39,14 +52,25 @@ function card(work, index) {
     box: media,
   }));
   const loop = wide && window.matchMedia(LARGE_LOOP).matches ? 'loop' : 'loop-960';
-  return h('li', { class: 'card', id: work.slug, 'data-loop': loop }, h('a', { class: 'card__link', href: rootPath() + 'works/' + work.slug + '.html' }, [
-    media,
-    h('span', { class: 'card__cap' }, [
-      h('span', { class: 'card__title' }, typo(plain(work.title))),
-      ' ',
-      h('span', { class: 'card__kind' }, typo(plain(work.kind))),
-    ]),
-  ]));
+  return h('li', { class: 'card', id: work.slug, 'data-slug': work.slug, 'data-loop': loop },
+    h('a', { class: 'card__link', href: workHref(work) }, [media, caption(work.title, work.kind)]));
+}
+
+/** A tile of the vertical row: its own 9:16 poster and loop. A work that is also on the wall keeps its id and
+ *  its page transition there, so the tile of such a work has neither. */
+function tile(work) {
+  const onWall = work.wall !== false;
+  const media = h('span', { class: 'card__media card__media--tall', style: onWall ? null : 'view-transition-name: work-' + work.slug });
+  media.append(picture({
+    src: mediaPath(work.slug, work.verticalTile.poster),
+    alt: '',
+    width: 720,
+    height: 1280,
+    priority: 'low',
+    box: media,
+  }));
+  return h('li', { class: 'card card--tall', id: onWall ? null : work.slug, 'data-slug': work.slug, 'data-loop': work.verticalTile.loop },
+    h('a', { class: 'card__link', href: workHref(work) }, [media, caption(work.title, work.verticalTile.kind || work.kind)]));
 }
 
 /** The loop of one card, created on first need. */
@@ -55,8 +79,8 @@ function loopFor(link) {
   let video = media.querySelector('.card__loop');
   if (video) return video;
   video = silentLoop('card__loop');
-  const card = link.closest('.card');
-  video.src = mediaPath(card.id, card.dataset.loop || 'loop', '.mp4');
+  const owner = link.closest('.card');
+  video.src = mediaPath(owner.dataset.slug, owner.dataset.loop || 'loop', '.mp4');
   video.addEventListener('playing', () => video.classList.add('is-on'));
   video.addEventListener('error', () => video.remove(), { once: true });
   media.append(video);
@@ -138,15 +162,16 @@ function viewLoops(links) {
   };
 }
 
-function initLoops(grid) {
+/** One set of loops for the wall and the vertical row: on a phone still only one card plays at a time. */
+function initLoops(lists) {
   if (calmMode() || typeof IntersectionObserver !== 'function') return;
-  const links = Array.from(grid.querySelectorAll('.card__link'));
+  const links = lists.flatMap((list) => Array.from(list.querySelectorAll('.card__link')));
   const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   const resume = canHover ? null : viewLoops(links);
   if (canHover) hoverLoops(links);
   // A hidden tab plays nothing.
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) grid.querySelectorAll('.card__loop').forEach((video) => video.pause());
+    if (document.hidden) document.querySelectorAll('.card__loop').forEach((video) => video.pause());
     else if (resume) resume();
   });
 }
@@ -162,9 +187,14 @@ function boot() {
   initTheme();
   const grid = document.querySelector('[data-grid]');
   if (!grid) return;
-  grid.replaceChildren(...SHOWN.map(card));
+  grid.replaceChildren(...WALL.map(card));
   grid.removeAttribute('aria-busy');
-  initLoops(grid);
+  const row = document.querySelector('[data-verticals]');
+  if (row) {
+    row.replaceChildren(...VERTICAL_TILES.map(tile));
+    row.removeAttribute('aria-busy');
+  }
+  initLoops([grid, row].filter(Boolean));
   revealTarget();
 }
 

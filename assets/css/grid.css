@@ -154,3 +154,43 @@
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
+
+/* ---------- under the wall: the vertical films, 9:16 tiles, four in a row (two on phones) ---------- */
+.verticals {
+  padding: clamp(56px, 7vw, 104px) var(--gutter) 0;
+}
+
+.verticals__title {
+  margin: 0 0 clamp(18px, 2vw, 28px);
+  font-size: clamp(19px, 1.9vw, 27px);
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+.vgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 700px) {
+  .vgrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(36px, 4vw, 56px) clamp(16px, 1.6vw, 24px);
+  }
+}
+
+.card__media--tall {
+  aspect-ratio: 9 / 16;
+}
+
+/* Without JavaScript the row would be a heading over nothing: the works are listed in the wall's <noscript>. */
+@media (scripting: none) {
+  .verticals {
+    display: none;
+  }
+}

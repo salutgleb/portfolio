@@ -1,7 +1,8 @@
 // Работы портфолио SALUT. Один файл на всё: сетка на главной, страницы works/<slug>.html,
 // плееры и подписи под ними берут данные отсюда. Разметку для правок трогать не нужно.
 //
-// Порядок в списке = порядок в сетке и в «Предыдущая / Следующая»: сильные работы первыми.
+// Порядок в списке = порядок в «Предыдущая / Следующая»: сначала работы сетки 16:9, сильные первыми,
+// потом вертикальные. В сетке и в ряду «Вертикальные ролики» работы идут в том же порядке.
 // Тот же порядок в WORKS генератора оболочек make_pages.py.
 // hidden: true убирает работу из сетки и листания.
 // Новая работа: запись здесь, папка media/<slug>/ и копия любой страницы works/*.html
@@ -14,12 +15,16 @@
 //   task, did, result   «Задача», «Что делали», «Итог» (пусто: пункта нет)
 //   role             строка «Роль», пока пусто: на странице не выводится
 //   ask              призыв под работой: 'studio', 'event' или 'vertical', тексты в work.js (нет: общий)
+//   wall             false: работы нет в сетке 16:9 на главной (вертикальная работа стоит только в ряду ниже)
+//   verticalTile     плитка 9:16 в ряду «Вертикальные ролики» под сеткой: poster и loop из media/<slug>/
+//                    без расширения; kind заменяет подпись работы под плиткой
 //   {{текст}}        факт ещё не подтвердил Глеб: посетитель видит обычный текст,
 //                    а по адресу с ?review=1 он подчёркнут. Подтвердил: убрать скобки.
 //
 // Файлы лежат в media/<slug>/:
 //   poster.jpg (1920w), poster-960.jpg   обложка в сетке и кадр до старта фильма 16:9
 //   loop.mp4                             немая петля в сетке; у работы без фильма она же на странице
+//   loop-v.mp4                           немая петля 9:16 плитки в ряду вертикальных роликов
 //   still-N.jpg (1600w)                  кадры под текстом, список в stills
 //   <film id>/master.m3u8                свой фильм в HLS, рядом папки качеств из levels (1080/, 720/)
 //
@@ -27,7 +32,7 @@
 //   id       свой ролик в HLS из media/<slug>/<id>/, levels: качества в папке
 //   ydisk    путь к файлу в публичной папке YDISK ниже. Играет прямо с Диска: по «Смотреть»
 //            страница берёт у API Диска свежую ссылку на файл (без Referer, Диск его не пускает).
-//            Не ответил Диск: сообщение и ссылка «Открыть на Яндекс Диске».
+//            Не ответил Диск: сообщение, свой фрагмент работы (если есть) и ссылка в Telegram.
 //   label, duration   подпись под плеером, например «Выпуск 1 · 56 мин»
 //   ratio    '16/9' или '9/16'
 //   poster   кадр до старта без .jpg (по умолчанию poster); у вертикалей рядом <poster>-s.jpg,
@@ -51,7 +56,7 @@ export const YDISK = 'https://disk.yandex.ru/d/Qmf7NYQ4vxci_g';
  * @typedef {{ slug: string, title: string, kind: string, client: string, format: string,
  *             role: string, task: string, did: string, result: string, ask?: 'studio' | 'event' | 'vertical', stills: string[],
  *             films: Film[], embed: string, embedLabel: string, embedDuration: string,
- *             hidden?: boolean }} Work
+ *             hidden?: boolean, wall?: boolean, verticalTile?: { poster: string, loop: string, kind?: string } }} Work
  */
 
 const PG = '/1. Видео-портфолио/1. Интервью/Персона Грата ';
@@ -71,7 +76,7 @@ export const WORKS = Object.freeze([
     result: '{{6 вертикальных роликов.}}',
     ask: 'event',
     stills: ['still-1', 'still-2', 'still-3'],
-    // Фильма пока нет: на странице петля и кадры.
+    // Общая работа: на странице петля и кадры. Вертикальный рилс с этих соревнований стоит отдельно, FOCUS Team.
     films: [],
     embed: '',
     embedLabel: '',
@@ -97,38 +102,6 @@ export const WORKS = Object.freeze([
     embed: '',
     embedLabel: 'Полный выпуск',
     embedDuration: '14 мин',
-  },
-  {
-    slug: 'app-lite',
-    title: 'App Lite',
-    kind: 'Вертикальные ролики',
-    client: 'App Lite, белёвская пастила',
-    format: 'Вертикальные ролики',
-    role: '',
-    task: '{{Сделать ролики о пастиле.}}',
-    did: '{{Снимали в студии фактуру крупным планом, яблоки, ягоды и упаковку.}}',
-    result: '{{13 вертикальных роликов.}}',
-    ask: 'vertical',
-    stills: ['still-1', 'still-2', 'still-3'],
-    // Все 13 роликов из папки «Белевская пастила» на Диске.
-    films: [
-      { id: 'film-1', label: 'Classic', duration: '0:25', ratio: '9/16', levels: [1080, 720], poster: 'v-1' },
-      { id: 'film-2', label: 'Meringue Berry', duration: '0:34', ratio: '9/16', levels: [1080, 720], poster: 'v-2' },
-      { id: 'film-3', label: 'Cinnamon', duration: '0:21', ratio: '9/16', levels: [1080, 720], poster: 'v-3' },
-      vertical('meringue-classic', 'Meringue Classic', '0:38'),
-      vertical('berry', 'Berry', '0:32'),
-      vertical('n1', 'Ролик 1', '0:24'),
-      vertical('n2', 'Ролик 2', '0:23'),
-      vertical('n3', 'Ролик 3', '0:24'),
-      vertical('n4', 'Ролик 4', '0:23'),
-      vertical('n5', 'Ролик 5', '0:24'),
-      vertical('n6', 'Ролик 6', '0:23'),
-      vertical('n7', 'Ролик 7', '0:24'),
-      vertical('n8', 'Ролик 8', '0:23'),
-    ],
-    embed: '',
-    embedLabel: '',
-    embedDuration: '',
   },
   {
     slug: 'rosatom-tvel',
@@ -192,6 +165,61 @@ export const WORKS = Object.freeze([
     embedDuration: '',
   },
   {
+    slug: 'focus-team',
+    title: 'FOCUS Team',
+    kind: 'Вертикальный ролик',
+    client: '',
+    format: '{{Вертикальный ролик}}',
+    role: '',
+    task: '',
+    did: '{{Снимали команду на финише Уралхим CRACE и интервью с ведущим.}}',
+    result: '',
+    ask: 'event',
+    stills: [],
+    wall: false,
+    verticalTile: { poster: 'reel-poster', loop: 'loop-v' },
+    films: [
+      { id: 'film', label: 'Ролик', duration: '0:44', ratio: '9/16', levels: [1080, 720], poster: 'reel-poster' },
+    ],
+    embed: '',
+    embedLabel: '',
+    embedDuration: '',
+  },
+  {
+    slug: 'app-lite',
+    title: 'App Lite',
+    kind: 'Вертикальные ролики',
+    client: 'App Lite, белёвская пастила',
+    format: 'Вертикальные ролики',
+    role: '',
+    task: '{{Сделать ролики о пастиле.}}',
+    did: '{{Снимали в студии фактуру крупным планом, яблоки, ягоды и упаковку.}}',
+    result: '{{13 вертикальных роликов.}}',
+    ask: 'vertical',
+    stills: ['still-1', 'still-2', 'still-3'],
+    wall: false,
+    verticalTile: { poster: 'v-1', loop: 'loop-v' },
+    // Все 13 роликов из папки «Белевская пастила» на Диске.
+    films: [
+      { id: 'film-1', label: 'Classic', duration: '0:25', ratio: '9/16', levels: [1080, 720], poster: 'v-1' },
+      { id: 'film-2', label: 'Meringue Berry', duration: '0:34', ratio: '9/16', levels: [1080, 720], poster: 'v-2' },
+      { id: 'film-3', label: 'Cinnamon', duration: '0:21', ratio: '9/16', levels: [1080, 720], poster: 'v-3' },
+      vertical('meringue-classic', 'Meringue Classic', '0:38'),
+      vertical('berry', 'Berry', '0:32'),
+      vertical('n1', 'Ролик 1', '0:24'),
+      vertical('n2', 'Ролик 2', '0:23'),
+      vertical('n3', 'Ролик 3', '0:24'),
+      vertical('n4', 'Ролик 4', '0:23'),
+      vertical('n5', 'Ролик 5', '0:24'),
+      vertical('n6', 'Ролик 6', '0:23'),
+      vertical('n7', 'Ролик 7', '0:24'),
+      vertical('n8', 'Ролик 8', '0:23'),
+    ],
+    embed: '',
+    embedLabel: '',
+    embedDuration: '',
+  },
+  {
     slug: 'mst',
     title: 'ГК МСТ',
     kind: 'Ролики с выставки',
@@ -203,6 +231,8 @@ export const WORKS = Object.freeze([
     result: '{{2 вертикальных ролика.}}',
     ask: 'event',
     stills: ['still-1'],
+    wall: false,
+    verticalTile: { poster: 'poster-v', loop: 'loop-v' },
     films: [
       { id: 'film', label: 'Полная версия', duration: '1:41', ratio: '9/16', levels: [720], poster: 'poster-v' },
       { id: 'film-2', label: 'Илья Савельев', duration: '0:44', ratio: '9/16', levels: [1080, 720], poster: 'v-2' },
@@ -223,6 +253,8 @@ export const WORKS = Object.freeze([
     ask: 'vertical',
     result: '',
     stills: [],
+    wall: false,
+    verticalTile: { poster: 'poster-v', loop: 'loop-v' },
     films: [
       { id: 'film', label: 'Ролик', duration: '0:15', ratio: '9/16', levels: [720], poster: 'poster-v' },
     ],
@@ -234,3 +266,7 @@ export const WORKS = Object.freeze([
 
 /** Works on the site, in order: hidden ones are left out of the grid and of prev/next. */
 export const SHOWN = Object.freeze(WORKS.filter((work) => !work.hidden));
+/** The 16:9 wall on the home page. */
+export const WALL = Object.freeze(SHOWN.filter((work) => work.wall !== false));
+/** The row of 9:16 tiles under the wall, «Вертикальные ролики». */
+export const VERTICAL_TILES = Object.freeze(SHOWN.filter((work) => work.verticalTile));
