@@ -54,17 +54,21 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* A count that would leave two in the last row (eight works now): the first row holds the two
-     strongest larger, 2 + 3 + 3, and every row is full. home.js gives those two wider image sizes. */
-  .grid:has(> .card:last-child:nth-child(3n + 2)) {
+  /* A count that would leave a short last row: the strongest go first and larger, two in a row, and every row
+     is full. Two left over (5, 8 works): 2 + 3 + 3. One left over (7 works now): 2 + 2 + 3. home.js gives those
+     cards wider image sizes (WIDE_CARDS). */
+  .grid:has(> .card:last-child:nth-child(3n + 2)),
+  .grid:has(> .card:last-child:nth-child(3n + 1)) {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
-  .grid:has(> .card:last-child:nth-child(3n + 2)) > .card {
+  .grid:has(> .card:last-child:nth-child(3n + 2)) > .card,
+  .grid:has(> .card:last-child:nth-child(3n + 1)) > .card {
     grid-column: span 2;
   }
 
-  .grid:has(> .card:last-child:nth-child(3n + 2)) > .card:nth-child(-n + 2) {
+  .grid:has(> .card:last-child:nth-child(3n + 2)) > .card:nth-child(-n + 2),
+  .grid:has(> .card:last-child:nth-child(3n + 1)) > .card:nth-child(-n + 4) {
     grid-column: span 3;
   }
 }

@@ -8,9 +8,10 @@ import { h, typo, plain, picture, calmMode, mediaPath, rootPath, silentLoop, try
 import { initTheme } from './theme.js';
 
 const CARD_SIZES = '(min-width: 1200px) 33vw, (min-width: 700px) 50vw, 100vw';
-// The first row of 2 + 3 + 3 (grid.css): with a count that leaves two in the last row of three,
-// the first two cards are half the width.
+// Rows of two on a wide screen (grid.css): two left over in the last row of three gives 2 + 3 + 3,
+// one left over gives 2 + 2 + 3. These first cards are half the width.
 const WIDE_CARD_SIZES = '(min-width: 700px) 50vw, 100vw';
+const WIDE_CARDS = [0, 4, 2][WALL.length % 3];
 const EAGER_CARDS = 3; // the first row loads at once, the rest when scrolled near
 // Cards seen without scrolling: the first one gets its poster first, the ones below the first screen wait.
 const CARDS_ON_FIRST_SCREEN = window.matchMedia('(min-width: 1200px)').matches ? 5
@@ -36,7 +37,7 @@ function caption(title, kind) {
 }
 
 function card(work, index) {
-  const wide = WALL.length % 3 === 2 && index < 2;
+  const wide = index < WIDE_CARDS;
   const media = h('span', { class: 'card__media', style: 'view-transition-name: work-' + work.slug });
   // The first card's poster is also asked for in <head> (make_pages.py): srcset and sizes must stay identical there.
   media.append(picture({

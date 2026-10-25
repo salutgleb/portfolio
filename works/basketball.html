@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Films from Yandex Disk: its downloader refuses a foreign Referer, so this page sends none. -->
+  <meta name="referrer" content="no-referrer">
+  <title>Баскетбол · Портфолио SALUT</title>
+  <meta name="description" content="Баскетбол: нарезка с игры. Работа SALUT, небольшого продакшна из Москвы.">
+  <link rel="canonical" href="https://salutgleb.github.io/portfolio/works/basketball.html">
+  <meta name="theme-color" content="#eeeae2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151719" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://salutgleb.github.io/portfolio/works/basketball.html">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:site_name" content="SALUT">
+  <meta property="og:title" content="Баскетбол · Портфолио SALUT">
+  <meta property="og:description" content="Баскетбол: нарезка с игры. Работа SALUT, небольшого продакшна из Москвы.">
+  <meta property="og:image" content="https://salutgleb.github.io/portfolio/media/basketball/poster.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1920">
+  <meta property="og:image:height" content="1080">
+  <meta property="og:image:alt" content="Кадр: Баскетбол">
+  <meta name="twitter:card" content="summary_large_image">
+  <script>
+    // Theme before the first paint, as on wearesalut.com: the saved choice or the system's.
+    // ?review=1 underlines the facts that still wait for confirmation (class="tbc") on every page
+    // of this visit, ?review=0 turns it off.
+    (function () {
+      var theme = null;
+      var review = /[?&]review=1(&|$)/.test(window.location.search);
+      try {
+        theme = window.localStorage.getItem('salut-theme');
+        if (review) window.sessionStorage.setItem('salut-review', '1');
+        else if (/[?&]review=0(&|$)/.test(window.location.search)) window.sessionStorage.removeItem('salut-review');
+        else review = window.sessionStorage.getItem('salut-review') === '1';
+      } catch (error) {
+        theme = null;
+      }
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+      if (review) document.documentElement.classList.add('review');
+    })();
+  </script>
+  <link rel="icon" href="../assets/logo/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="../assets/logo/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/logo/apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/intertight-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/intertight-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" as="image" href="../media/basketball/poster-960.jpg" media="(max-width: 799px)" fetchpriority="high">
+  <link rel="preload" as="image" href="../media/basketball/poster.jpg" media="(min-width: 800px)" fetchpriority="high">
+  <link rel="stylesheet" href="../assets/css/base.css">
+  <link rel="stylesheet" href="../assets/css/work.css">
+  <link rel="stylesheet" href="../assets/css/form.css">
+  <link rel="modulepreload" href="../assets/js/works.js">
+  <link rel="modulepreload" href="../assets/js/dom.js">
+  <link rel="modulepreload" href="../assets/js/theme.js">
+  <link rel="modulepreload" href="../assets/js/player.js">
+  <link rel="modulepreload" href="../assets/js/disk.js">
+  <script type="module" src="../assets/js/work.js" blocking="render"></script>
+  <script type="module" src="../assets/js/lead-form.js"></script>
+</head>
+<body data-root="../" data-slug="basketball">
+  <!-- A work page. Its texts, video and place in the order live in assets/js/works.js; this file only
+       names the work (data-slug) and carries the title and link preview. New work: copy under the new slug. -->
+  <a class="skip" href="#main">Перейти к&nbsp;работе</a>
+
+  <header class="top">
+    <a class="top__brand" href="../index.html">
+      <img class="logo logo--light" src="../assets/logo/salut-logo.svg" alt="SALUT" width="90" height="38">
+      <img class="logo logo--dark" src="../assets/logo/salut-logo-dark.svg" alt="SALUT" width="90" height="38">
+      <span class="top__section">Портфолио</span>
+    </a>
+    <nav class="top__nav" aria-label="Разделы">
+      <a href="https://www.wearesalut.com">Сайт&nbsp;SALUT</a>
+      <a href="#contact">Связаться</a>
+    </nav>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7.5"/><path d="M12 4.5a7.5 7.5 0 0 1 0 15z" fill="currentColor" stroke="none"/></svg></button>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <article class="work" data-work aria-busy="true" aria-labelledby="work-title">
+      <noscript><p class="noscript">Баскетбол. Видео и&nbsp;описание работы видны с&nbsp;включённым JavaScript. <a href="../index.html">Все работы</a></p></noscript>
+    </article>
+
+    <section class="contact" id="contact" aria-labelledby="contact-title">
+      <div class="contact__head">
+        <h2 class="contact__title" id="contact-title">Расскажите о&nbsp;проекте в&nbsp;двух словах</h2>
+        <p class="contact__lead">Напишите, что снимаем, для чего и&nbsp;к&nbsp;какой дате. Если задача не&nbsp;похожа ни&nbsp;на&nbsp;один формат, всё равно пишите. Глеб ответит сам, потом созвонимся и&nbsp;обсудим детали.</p>
+        <ul class="contact__direct">
+          <li><a href="https://t.me/imglebsmirnov" rel="noopener">Telegram @imglebsmirnov</a></li>
+          <li><a href="tel:+79104248144">+7&nbsp;910&nbsp;424-81-44</a></li>
+        </ul>
+      </div>
+      <div id="lead-form"><p class="contact__after">Напишите Глебу в&nbsp;Telegram <a href="https://t.me/imglebsmirnov" rel="noopener">@imglebsmirnov</a> или позвоните: <a href="tel:+79104248144">+7&nbsp;910&nbsp;424-81-44</a>.</p></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a class="footer__brand" href="../index.html" aria-label="Портфолио SALUT, все работы">
+      <img class="logo logo--light" src="../assets/logo/salut-logo.svg" alt="" width="95" height="40">
+      <img class="logo logo--dark" src="../assets/logo/salut-logo-dark.svg" alt="" width="95" height="40">
+    </a>
+    <p class="footer__line label"><span class="footer__group">Глеб и&nbsp;Соня · Москва</span><span class="footer__sep" aria-hidden="true"> · </span><span class="footer__group"><a href="https://t.me/imglebsmirnov" rel="noopener">Telegram @imglebsmirnov</a> · <a href="tel:+79104248144">+7&nbsp;910&nbsp;424-81-44</a></span></p>
+    <p class="footer__links"><a href="../privacy.html">Политика обработки персональных данных</a></p>
+    <svg class="spark" viewBox="0 0 9 9" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 0h1v3H4zM4 6h1v3H4zM0 4h3v1H0zM6 4h3v1H6zM1 1h1v1H1zM2 2h1v1H2zM7 1h1v1H7zM6 2h1v1H6zM1 7h1v1H1zM2 6h1v1H2zM7 7h1v1H7zM6 6h1v1H6zM3 3h3v1H3zM3 5h3v1H3zM3 4h1v1H3zM5 4h1v1H5z"/></svg>
+    <button class="theme-toggle" type="button" data-theme-toggle aria-label="Включить тёмную тему" hidden><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7.5"/><path d="M12 4.5a7.5 7.5 0 0 1 0 15z" fill="currentColor" stroke="none"/></svg><span data-theme-label>Включить тёмную тему</span></button>
+  </footer>
+</body>
+</html>
